@@ -1,4 +1,4 @@
-# Старт-стоп таймер для мотоджимханы
+# Внешний дисплей для "Старт-стоп таймера для мотоджимханы"
 [Схема подключения](https://github.com/VeZhD/sw-telemetry/blob/main/sw_client_LCD-I2C-1602/sw_client_LCD-I2C-1602_connection%20scheme.png)
 
 ### Список компонентов
