@@ -46,7 +46,7 @@ const char *password = "StopWatcher";
 bool ledState = 0;
 const int ledPin = 2;
 
-#define SENSOR_PIN 38     // пин подключения датчика луча
+#define SENSOR_PIN 6     // пин подключения датчика луча
 #define LAST_TIME_PIN 39  // пин кнопки переключения предыдущего времени(1-10)
 
 int startStopState;
@@ -260,6 +260,7 @@ void printtime(void) {
 
   display.display();
 }
+
 void printip(void) {
   display.clearDisplay();
   display.setCursor(1, 32);  // Start at top-left corner
@@ -271,7 +272,6 @@ void printip(void) {
   display.display();
   delay(1500);
 }
-
 
 void notifyClients(void) {
   lastWsUpTime = millis();

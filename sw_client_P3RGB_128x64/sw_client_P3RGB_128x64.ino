@@ -5,6 +5,7 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 #define PIXEL_COLOUR_DEPTH_BITS 2
 #define NO_GFX
 #define USE_GFX_ROOT
+#define NO_FAST_FUNCTIONS
 */
 
 #include <WiFi.h>
@@ -49,9 +50,15 @@ bool ssid_laststate = HIGH;
 uint32_t ssid_state_ts = millis();
 
 // настройки размера матрицы
-#define PANEL_RES_X 128  // Number of pixels wide of each INDIVIDUAL panel module.
-#define PANEL_RES_Y 64   // Number of pixels tall of each INDIVIDUAL panel module.
-#define PANEL_CHAIN 1    // Total number of panels chained one to another
+/*
+#define PANEL_RES_X 128	// Single panel of 64 pixel width
+#define PANEL_RES_Y 64	// CHANGE THIS VALUE to 64 IF USING 64px HIGH panel(s) with E PIN
+#define PANEL_CHAIN 1	// Number of modules chained together, i.e. 4 panels chained result in virtualmatrix 64x4=256 px long
+*/
+
+#define MATRIX_WIDTH 128	// Number of pixels wide of each INDIVIDUAL panel module.
+#define MATRIX_HEIGHT 64	// Number of pixels tall of each INDIVIDUAL panel module.
+#define CHAIN_LENGTH 1		// Total number of panels chained one to another
 
 byte      Brightness = 155;
 bool      Brightness_State = HIGH;
@@ -61,11 +68,10 @@ uint32_t  Brightness_State_ts = 0;
 HUB75_I2S_CFG::i2s_pins _pins = { R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN, OE_PIN, CLK_PIN };
 
 HUB75_I2S_CFG mxconfig(
-  PANEL_RES_X,  // Module width
-  PANEL_RES_Y,  // Module height
-  PANEL_CHAIN,  // chain length
+  MATRIX_WIDTH,   // Module width
+  MATRIX_HEIGHT,  // Module height
+  CHAIN_LENGTH,   // chain length
   _pins, HUB75_I2S_CFG::SHIFTREG, true);
-//MatrixPanel_I2S_DMA dma_display;
 
 MatrixPanel_I2S_DMA *dma_display = new MatrixPanel_I2S_DMA(mxconfig);
 // end подключение матрицы
@@ -1441,22 +1447,22 @@ void updateDisplay() {
 
 void printWifiState() {
   if (Connected == true) {
-    dma_display->fillRect(int(PANEL_RES_X - 3), int(PANEL_RES_Y - 7), 3, 3, dma_display->color444(0, 255, 0));
+    dma_display->fillRect(int(MATRIX_WIDTH - 3), int(MATRIX_HEIGHT - 7), 3, 3, dma_display->color444(0, 255, 0));
   } else {
-    dma_display->fillRect(int(PANEL_RES_X - 3), int(PANEL_RES_Y - 7), 3, 3, dma_display->color444(255, 0, 0));
+    dma_display->fillRect(int(MATRIX_WIDTH - 3), int(MATRIX_HEIGHT - 7), 3, 3, dma_display->color444(255, 0, 0));
   }
 }
 
 void printWsState() {
   if (ConnectedWS == true) {
-    dma_display->fillRect(int(PANEL_RES_X - 3), int(PANEL_RES_Y - 3), 3, 3, dma_display->color444(0, 255, 0));
+    dma_display->fillRect(int(MATRIX_WIDTH - 3), int(MATRIX_HEIGHT - 3), 3, 3, dma_display->color444(0, 255, 0));
   } else {
-    dma_display->fillRect(int(PANEL_RES_X - 3), int(PANEL_RES_Y - 3), 3, 3, dma_display->color444(255, 0, 0));
+    dma_display->fillRect(int(MATRIX_WIDTH - 3), int(MATRIX_HEIGHT - 3), 3, 3, dma_display->color444(255, 0, 0));
   }
 }
 
 void PrintSSID() {
-  dma_display->setCursor(1, int(PANEL_RES_Y - 15));
+  dma_display->setCursor(1, int(MATRIX_HEIGHT - 15));
   dma_display->setTextSize(1);  // size 1 == 8 pixels high
   dma_display->setTextColor(dma_display->color444(222, 222, 222));
   dma_display->print(String(ssid[wifi_id]));
@@ -1464,7 +1470,7 @@ void PrintSSID() {
 
 void printBrightness() {
   dma_display->setTextColor(dma_display->color444(100, 100, 100));
-  dma_display->setCursor(int(PANEL_RES_X - 6 * 3), int(PANEL_RES_Y - 15));  // start at top left, with 8 pixel of spacing
+  dma_display->setCursor(int(MATRIX_WIDTH - 6 * 3), int(MATRIX_HEIGHT - 15));  // start at top left, with 8 pixel of spacing
   dma_display->setTextSize(1);
   dma_display->print(Brightness);
 }
@@ -1517,20 +1523,14 @@ void PrintTime() {
   } else {
     int dX = 0;
     // Minutes
-    //drawDigit(dX + 0, CurrentMinutes);
-    drawDigit(dX + 0, 0);
+    drawDigit(dX + 0, CurrentMinutes);
     // Seconds
-    //drawDigit(dX + (1 * SizeX) + 5, CurrenttSeconds);
-    //drawDigit(dX + (2 * SizeX) + 6, Currentseconds);
-    drawDigit(dX + (1 * SizeX) + 5, 1);
-    drawDigit(dX + (2 * SizeX) + 6, 2);
+    drawDigit(dX + (1 * SizeX) + 5, CurrenttSeconds);
+    drawDigit(dX + (2 * SizeX) + 6, Currentseconds);
     // milliseconds
-    //drawDigit(dX + (3 * SizeX) + 11, CurrentmSeconds);
-    //drawDigit(dX + (4 * SizeX) + 12, CurrentmiSeconds);
-    //drawDigit(dX + (5 * SizeX) + 13, CurrentmilSeconds);
-    drawDigit(dX + (3 * SizeX) + 11, 3);
-    drawDigit(dX + (4 * SizeX) + 12, 4);
-    drawDigit(dX + (5 * SizeX) + 13, 5);
+    drawDigit(dX + (3 * SizeX) + 11, CurrentmSeconds);
+    drawDigit(dX + (4 * SizeX) + 12, CurrentmiSeconds);
+    drawDigit(dX + (5 * SizeX) + 13, CurrentmilSeconds);
     // Двоеточие
     dma_display->fillRect(dX + (1 * SizeX) + 1, int(SizeY / 3), 3, 3, DOT_COLOR);
     dma_display->fillRect(dX + (1 * SizeX) + 1, int(SizeY - SizeY / 3), 3, 3, DOT_COLOR);
@@ -1547,7 +1547,7 @@ void PrintTimeSeconds() {
     dma_display->setTextWrap(false);  // Don't wrap at end of line - will do ourselves
     dma_display->setCursor(0, dy);
     dma_display->setTextColor(TIME_COLOR);
-    dma_display->setTextSize(font_size);  // size 1 == 8 pixels high
+    dma_display->setTextSize(font_size);
     dma_display->print(CurrentMinutes);
     dma_display->fillRect(5 * font_size + 1, 2 * font_size + 1, dot, dot, DOT_COLOR);  // двоеточие
     dma_display->fillRect(5 * font_size + 1, 4 * font_size + 2, dot, dot, DOT_COLOR);  // двоеточие
@@ -1566,7 +1566,7 @@ void PrintTimeMilSeconds() {
     dma_display->setTextWrap(false);  // Don't wrap at end of line - will do ourselves
     dma_display->setCursor(0, dy);
     dma_display->setTextColor(TIME_COLOR);
-    dma_display->setTextSize(font_size);  // size 1 == 8 pixels high
+    dma_display->setTextSize(font_size);
     dma_display->fillRect(0, 6 * font_size + dot + dy/2, dot, dot, DOT_COLOR);  // точка перед милисикундами
     dma_display->setCursor(dot + 1, dy);
     dma_display->print(CurrentmSeconds);
@@ -1716,9 +1716,9 @@ void BrightnessChangeLoop() {
 
 void PrintCopyright(void) {
   dma_display->setTextColor(TIME_COLOR);
-  dma_display->setCursor(8, 8);  // int(PANEL_RES_Y - 16));
+  dma_display->setCursor(8, 8);  // int(MATRIX_HEIGHT - 16));
   dma_display->print("Made by VeZhD");
-  dma_display->setCursor(5, 16);  // int(PANEL_RES_Y - 8));
+  dma_display->setCursor(5, 16);  // int(MATRIX_HEIGHT - 8));
   dma_display->print("Code from Alekssaff");
   updateDisplay();
   delay(1500);
@@ -1726,7 +1726,7 @@ void PrintCopyright(void) {
 }
 
 void setup() {
-  pinMode(SSID_PIN, INPUT_PULLUP);
+  pinMode(SSID_PIN, INPUT_PULLUP);       // пин кнопки переключения точки доступа
   pinMode(FONT_PIN, INPUT_PULLUP);       // пин кнопки переключения шрифта
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
   pinMode(BRIGHTNESS_PIN, INPUT_PULLUP); // пин кнопки яркости
@@ -1752,6 +1752,7 @@ void setup() {
   dma_display->clearScreen();
   dma_display->setBrightness(Brightness);  //0-255
   //dma_display->setLatBlanking(0);
+  
   // event handler
   webSocket.onEvent(webSocketEvent);
   updateDisplay();
