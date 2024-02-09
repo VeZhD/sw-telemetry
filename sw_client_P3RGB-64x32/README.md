@@ -1,4 +1,4 @@
-# Старт-стоп таймер для мотоджимханы
+# Внешний дисплей для "Старт-стоп таймера для мотоджимханы"
 [Схема подключения](https://github.com/VeZhD/sw-telemetry/blob/main/sw_client_P3RGB-64x32/sw_client_P3RGB-64x32_connection%20scheme.png)
 
 ### Список компонентов
