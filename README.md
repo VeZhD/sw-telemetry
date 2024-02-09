@@ -19,3 +19,6 @@
 [Instagram](https://www.instagram.com/vezhd/)
 
 [YouTube](https://www.youtube.com/@VeZhD07)
+
+
+P.S. предложения по улучшению приветствуются (:
