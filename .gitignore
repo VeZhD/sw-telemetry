@@ -1,3 +1,4 @@
+.gitignore
 .vscode/
 settings.json
 .DS_store
