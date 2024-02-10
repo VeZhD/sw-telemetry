@@ -5,6 +5,7 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 #define PIXEL_COLOUR_DEPTH_BITS 2
 #define NO_GFX
 #define USE_GFX_ROOT
+#define NO_FAST_FUNCTIONS
 */
 
 #include <WiFi.h>
@@ -534,8 +535,9 @@ const bool digits[Font_Count][10][SizeY][SizeX] = {{
     { 1, 1, 0, 0, 0, 0, 1, 1, 1 },
     { 0, 1, 1, 1, 1, 1, 1, 1, 0 },
     { 0, 0, 1, 1, 1, 1, 1, 0, 0 },
+
+    } 
   }
-}
 };
 
 void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
@@ -602,7 +604,7 @@ void ResetTime() {
   TopTime = 599999;
 }
 
-void timerLoop() {
+void TimerLoop() {
   if (TimerState == HIGH && TimerLastState != TimerState) {
     for (int i = 9; i > 0; i--){
       LastTime[i] = LastTime[i - 1];
@@ -720,14 +722,14 @@ void PrintTime() {
 }
 
 void PrintTimeSeconds() {
-    const uint8_t font_size = 8;
+    const uint8_t font_size = 4;
     const uint8_t dy = 4;
     const uint8_t dot = (font_size/2+1);
 
     dma_display->setTextWrap(false);  // Don't wrap at end of line - will do ourselves
     dma_display->setCursor(0, dy);
     dma_display->setTextColor(TIME_COLOR);
-    dma_display->setTextSize(font_size);  // size 1 == 8 pixels high
+    dma_display->setTextSize(font_size);
     dma_display->print(CurrentMinutes);
     dma_display->fillRect(5 * font_size + 1, 2 * font_size + 1, dot, dot, DOT_COLOR);  // двоеточие
     dma_display->fillRect(5 * font_size + 1, 4 * font_size + 2, dot, dot, DOT_COLOR);  // двоеточие
@@ -739,14 +741,14 @@ void PrintTimeSeconds() {
 }
 
 void PrintTimeMilSeconds() {
-    const uint8_t font_size = 8;
+    const uint8_t font_size = 4;
     const uint8_t dy = 4;
     const uint8_t dot = (font_size/2+1);
 
     dma_display->setTextWrap(false);  // Don't wrap at end of line - will do ourselves
     dma_display->setCursor(0, dy);
     dma_display->setTextColor(TIME_COLOR);
-    dma_display->setTextSize(font_size);  // size 1 == 8 pixels high
+    dma_display->setTextSize(font_size);
     dma_display->fillRect(0, 6 * font_size + dot + dy/2, dot, dot, DOT_COLOR);  // точка перед милисикундами
     dma_display->setCursor(dot + 1, dy);
     dma_display->print(CurrentmSeconds);
@@ -910,7 +912,7 @@ void PrintCopyright(void) {
 }
 
 void setup() {
-  pinMode(SSID_PIN, INPUT_PULLUP);
+  pinMode(SSID_PIN, INPUT_PULLUP);       // пин кнопки переключения точки доступа
   pinMode(FONT_PIN, INPUT_PULLUP);       // пин кнопки переключения шрифта
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
   pinMode(BRIGHTNESS_PIN, INPUT_PULLUP); // пин кнопки яркости
@@ -936,6 +938,7 @@ void setup() {
   dma_display->clearScreen();
   dma_display->setBrightness(Brightness);  //0-255
   //dma_display->setLatBlanking(0);
+  
   // event handler
   webSocket.onEvent(webSocketEvent);
   updateDisplay();
@@ -945,7 +948,7 @@ void setup() {
 }
 
 void loop() {
-  timerLoop();
+  TimerLoop();
   ssidChangeLoop();
   FontChangeLoop();
   LastTimeIDChangeLoop();
@@ -955,7 +958,7 @@ void loop() {
   printWifiState();
   printWsState();
 
-switch (Font_ID) {
+  switch (Font_ID) {
     case (Font_Count + 1):
       PrintTimeSeconds();
       break;
