@@ -1,3 +1,5 @@
 .vscode/
 settings.json
 .DS_store
+src/SSID_client.h
+*/src/SSID_client.h
