@@ -14,7 +14,7 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 
 // from src path:
-#include "../src/SSID_client.h"
+#include "src/SSID_client.h"
 
 // Подключение Матрицы
 #define R1_PIN 1

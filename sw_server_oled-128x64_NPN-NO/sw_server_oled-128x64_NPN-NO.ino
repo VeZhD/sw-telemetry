@@ -30,7 +30,7 @@ GND -> GND
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 // from src path:
-#include "../src/SSID_server.h"
+//#include "../src/SSID_server.h"
 
 
 #define SCREEN_WIDTH 128     // OLED display width, in pixels
@@ -43,8 +43,8 @@ DNSServer dnsServer;
 const char *server_name = "*"; //"sw";  // Can be "*" to all DNS requests
 
 // Replace with your network credentials
-//const char *ssid = "StopWatcher";
-//const char *password = "StopWatcher";
+const char *ssid = "StopWatcher";
+const char *password = "StopWatcher";
 
 bool ledState = 0;
 const int ledPin = 2;
