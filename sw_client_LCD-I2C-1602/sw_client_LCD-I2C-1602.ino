@@ -17,8 +17,8 @@ GND -> GND
 
 LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
-#define SSID_PIN      13    // пин кнопки переключения wifi сети
-#define LAST_TIME_PIN 12    // пин кнопки переключения предыдущего времени(1-10)
+#define SSID_PIN      34    // пин кнопки переключения wifi сети
+#define LAST_TIME_PIN 38    // пин кнопки переключения предыдущего времени(1-10)
 
 #define EEPROM_SIZE 64
 
@@ -92,8 +92,8 @@ void LastTimeIDChangeLoop() {
 }
 
 void setup() {
-  pinMode(SSID_PIN, INPUT);
-  pinMode(LAST_TIME_PIN, INPUT);  // пин кнопки переключения предыдущего времени(1-10)
+  pinMode(SSID_PIN, INPUT_PULLUP);
+  pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
   Serial.begin(115200);
 
   // For ESP8266
