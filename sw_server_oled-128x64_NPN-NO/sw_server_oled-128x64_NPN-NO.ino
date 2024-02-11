@@ -184,7 +184,7 @@ void initWebSocket(void) {
 
 void setup() {
   // Serial port for debugging purposes
-  pinMode(SENSOR_PIN, INPUT);
+  pinMode(SENSOR_PIN, INPUT_PULLUP);
 
   Serial.begin(115200);
   Serial.println();
@@ -236,7 +236,7 @@ void setup() {
 void loop() {
   dnsServer.processNextRequest();
 
-  startStopState = digitalRead(SENSOR_PIN);
+  startStopState = !digitalRead(SENSOR_PIN);
 
   if (timerState == 0) {
     if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
@@ -267,5 +267,5 @@ void loop() {
     notifyClients();
   }
   printtime();
-  //delay(1);
+  delay(1);
 }
