@@ -15,15 +15,14 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 #define EEPROM_SIZE 64
 
 #include <WiFi.h>
-#include <EEPROM.h>
 #include <WebSocketsClient.h>
+#include <EEPROM.h>
+
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 
-// from src path:
-#include "src/SSID_client.h"
-#include "src/client_variables.h"
-#include "src/64x32.h"
-#include "src/function.h"
+#include "SSID_client.h"      // При необходимости изменить название и паролт WiFi точки доступа
+#include "client.h"
+#include "64x32.h"
 
 // Подключение Матрицы
 #define R1_PIN 1
@@ -45,6 +44,7 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 #define MATRIX_WIDTH 64   // Number of pixels wide of each INDIVIDUAL panel module.
 #define MATRIX_HEIGHT 32   // Number of pixels tall of each INDIVIDUAL panel module.
 #define CHAIN_LENGTH 1    // Total number of panels chained one to another
+
 HUB75_I2S_CFG::i2s_pins _pins = { R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN, OE_PIN, CLK_PIN };
 
 HUB75_I2S_CFG mxconfig(

@@ -5,34 +5,33 @@ SDA -> D2(GPIO4) For ESP8266(Wemos D1 mini) / 33 For ESP32s2(Wemos(Lolin) S2 min
 VCC -> 5V
 GND -> GND
 *********/
-// For ESP32\ESP32s2 and etc.
-#include <WiFi.h>
-// For ESP8266
-//#include <ESP8266WiFi.h>
-
-#include <EEPROM.h>
-#include <WebSocketsClient.h>
-#include <OLED_I2C.h>
-
-#define SDA_PIN 33 //18 or 33
-#define SCL_PIN 35 //16 or 35
-
-// Подключение Дисплея
-OLED myOLED(SDA_PIN, SCL_PIN);  // Remember to add the RESET pin if your display requires it...
-extern uint8_t SmallFont[];
-extern uint8_t BigNumbers[];
+#define SDA_PIN 33 //18 or 33 for SDA
+#define SCL_PIN 35 //16 or 35 for SCL
 
 #define SSID_PIN      34   // пин кнопки переключения wifi сети
 #define FONT_PIN      36   // пин кнопки переключения шрифта
 #define LAST_TIME_PIN 38   // пин кнопки переключения предыдущего времени(1-10)
 
-#define EEPROM_SIZE 64
+#define EEPROM_SIZE   64    // размер EEPROM
 
-// from src path:
-#include "src/SSID_client.h"
-#include "src/client_variables.h"
-#include "src/128x64.h"
-#include "src/function.h"
+// For ESP32\ESP32s2 and etc.
+#include <WiFi.h>
+// For ESP8266
+//#include <ESP8266WiFi.h>
+
+#include <WebSocketsClient.h>
+#include <EEPROM.h>
+
+#include <OLED_I2C.h>
+
+#include "SSID_client.h"      // При необходимости изменить название и паролт WiFi точки доступа
+#include "client.h"
+#include "128x64.h"
+
+// Подключение Дисплея
+OLED myOLED(SDA_PIN, SCL_PIN);  // Remember to add the RESET pin if your display requires it...
+extern uint8_t SmallFont[];
+extern uint8_t BigNumbers[];
 
 void printWifiState() {
   if (Connected == true) {

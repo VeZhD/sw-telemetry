@@ -1,32 +1,30 @@
 /*********
-display OLED i2c 128*64 witch WEMOS(LOLIN) S2 mini
+display LCD 1602 I2C with WEMOS(LOLIN) S2 mini
 SCL -> D1(GPIO5) For ESP8266(Wemos D1 mini) / 35 For ESP32s2(Wemos(Lolin) S2 mini)
 SDA -> D2(GPIO4) For ESP8266(Wemos D1 mini) / 33 For ESP32s2(Wemos(Lolin) S2 mini)
 VCC -> 5V
 GND -> GND
 *********/
+#define SSID_PIN      34    // пин кнопки переключения wifi сети
+#define LAST_TIME_PIN 38    // пин кнопки переключения предыдущего времени(1-10)
+
+#define EEPROM_SIZE   64    // размер EEPROM
+
 // For ESP32\ESP32s2 and etc.
 #include <WiFi.h>
 // For ESP8266
 //#include <ESP8266WiFi.h>
-
-#include <EEPROM.h>
 #include <WebSocketsClient.h>
+#include <EEPROM.h>
+
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
 
+#include "SSID_client.h"      // При необходимости изменить название и паролт WiFi точки доступа
+#include "client.h"
+
 LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
-#define SSID_PIN      34    // пин кнопки переключения wifi сети
-#define LAST_TIME_PIN 38    // пин кнопки переключения предыдущего времени(1-10)
-
-#define EEPROM_SIZE 64
-
-// from src path:
-#include "src/SSID_client.h"
-#include "src/client_variables.h"
-#include "src/128x64.h"
-#include "src/function.h"
 
 void printWifiState() {
   if (Connected == true) {
@@ -75,7 +73,7 @@ void PrintCopyright(void) {
   lcd.print("Made by VeZhD");
   lcd.setCursor(0,1);
   lcd.print("Code from Alekssaff");
-  delay(1500);
+  delay(750);
 }
 
 void LastTimeIDChangeLoop() {
@@ -128,7 +126,7 @@ void loop() {
   printWifiState();
   printWsState();
   PrintTime();
- if (LastTimeID_State_ts < millis() - 1500) {
+ if (LastTimeID_State_ts < millis() - 15000) {
     LastTimeID = LastTimeCount;
   }
   if (ssid_state_ts > millis() - 5000) {
