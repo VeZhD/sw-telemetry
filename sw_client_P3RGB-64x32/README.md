@@ -1,5 +1,6 @@
 # Внешний дисплей для "Старт-стоп таймера для мотоджимханы"
 [Схема подключения](https://github.com/VeZhD/sw-telemetry/blob/main/sw_client_P3RGB-64x32/sw_client_P3RGB-64x32_connection%20scheme.png)
+
 Пины матрицы подключить в соответсвии c распиновкой [разъема](https://github.com/VeZhD/sw-telemetry/blob/main/sw_client_P3RGB-128x64/hub75-pinout.jpg) и уканазнными пинами в скетче(возможно когда-нибудь позже нарисую, но это вряд-ли)
 
 ### Список компонентов
