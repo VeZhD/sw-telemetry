@@ -1,4 +1,3 @@
-
 /*********
 Connect I2C Oled display 
 SCL -> WeMos D1 mini - D1(GPIO5) / Lolin s2 mini - 35
@@ -30,10 +29,9 @@ GND -> GND
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-// from src path:
-#include "src/SSID_server.h"
-#include "src/128x64.h"
-#include "src/server_variables.h"
+#include "SSID_server.h"
+#include "server.h"
+//#include "128x64.h"
 
 #define SCREEN_WIDTH 128     // OLED display width, in pixels
 #define SCREEN_HEIGHT 64     // OLED display height, in pixels

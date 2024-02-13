@@ -1,4 +1,5 @@
-// настройки точки доступа
+ // Replace with your network credentials
+
 const char *ssid[]      = { "StopWatcher", "StopWatcher02" };   // список возможных сетей
 const char *password[]  = { "StopWatcher", "StopWatcher02" };   // список паролей к сетям
 const bool wsSSL[]      = { false, false };                     // если вебсокеты работают через SSL - true, обычно false

@@ -15,15 +15,14 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 #define EEPROM_SIZE 64
 
 #include <WiFi.h>
-#include <EEPROM.h>
 #include <WebSocketsClient.h>
+#include <EEPROM.h>
+
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 
-// from src path:
-#include "src/SSID_client.h"
-#include "src/client_variables.h"
-#include "src/128x64.h"
-#include "src/function.h"
+#include "SSID_client.h"      // При необходимости изменить название и паролт WiFi точки доступа
+#include "client.h"
+#include "128x64.h"
 
 // Подключение Матрицы
 #define R1_PIN 1
