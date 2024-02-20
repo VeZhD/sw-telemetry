@@ -84,6 +84,7 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
   }
 }
 
+#if defined(ESP32)
 void WiFiEvent(WiFiEvent_t event) {
   switch (event) {
     case ARDUINO_EVENT_WIFI_READY:
@@ -110,6 +111,8 @@ void WiFiEvent(WiFiEvent_t event) {
       break;
   }
 }
+#endif
+
 
 void connectToHost() {
   WiFi.disconnect(true);

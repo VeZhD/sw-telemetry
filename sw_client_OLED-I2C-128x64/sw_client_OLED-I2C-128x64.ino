@@ -5,19 +5,26 @@ SDA -> D2(GPIO4) For ESP8266(Wemos D1 mini) / 33 For ESP32s2(Wemos(Lolin) S2 min
 VCC -> 5V
 GND -> GND
 *********/
-#define SDA_PIN 33 //18 or 33 for SDA
-#define SCL_PIN 35 //16 or 35 for SCL
-
 #define SSID_PIN      34   // пин кнопки переключения wifi сети
 #define FONT_PIN      36   // пин кнопки переключения шрифта
 #define LAST_TIME_PIN 38   // пин кнопки переключения предыдущего времени(1-10)
 
-#define EEPROM_SIZE   64    // размер EEPROM
 
-// For ESP32\ESP32s2 and etc.
-#include <WiFi.h>
-// For ESP8266
-//#include <ESP8266WiFi.h>
+#if defined(ESP8266)
+  #pragma message "ESP8266 stuff happening!"
+  #define SDA_PIN 4 // change for yours SDA pin on ESP8266
+  #define SCL_PIN 5 // changr for yours SCL pin on ESP8266
+  #include <ESP8266WiFi.h>
+#elif defined(ESP32)
+  #pragma message "ESP32 stuff happening!"
+  #define SDA_PIN 33 //change for yours SDA pin on ESP32\32s2\etc.
+  #define SCL_PIN 35 //change for yours SCL pin on ESP32\32s2\etc.
+  #include <WiFi.h>
+#else
+#error "This ain't a ESP8266 or ESP32, dumbo!"
+#endif
+
+#define EEPROM_SIZE   64    // размер EEPROM
 
 #include <WebSocketsClient.h>
 #include <EEPROM.h>
@@ -158,13 +165,23 @@ void setup() {
   pinMode(FONT_PIN, INPUT_PULLUP);       // пин кнопки переключения шрифта
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
 
+#if defined(ESP8266)
   // For ESP8266
-  //EEPROM.begin(EEPROM_SIZE);
-  
+  EEPROM.begin(EEPROM_SIZE);
+  if (wsSSL[wifi_id] == true) {
+    webSocket.beginSSL(wsHost[wifi_id], wsPort[wifi_id], wsPath[wifi_id]);
+  } else {
+    webSocket.begin(wsHost[wifi_id], wsPort[wifi_id], wsPath[wifi_id]);
+  }
+#elif defined(ESP32)
   // For ESP32/ESP32s2
   if (!EEPROM.begin(EEPROM_SIZE)) {
     delay(1000000);
   }
+  
+  WiFi.onEvent(WiFiEvent);
+#endif
+
   if ((EEPROM.read(3) >= 0) && (EEPROM.read(3) <= Font_Count)) {
     Font_ID = EEPROM.read(3);
   }
@@ -175,9 +192,10 @@ void setup() {
   if (!myOLED.begin(SSD1306_128X64))
     while (1)
       ;  // In case the library failed to allocate enough RAM for the display buffer...
+
   //myOLED.rotateDisplay(true); // переворот на 180 градусов
   //myOLED.setBrightness(255);
-  WiFi.onEvent(WiFiEvent);
+  //WiFi.onEvent(WiFiEvent);
 
   // event handler
   webSocket.onEvent(webSocketEvent);
