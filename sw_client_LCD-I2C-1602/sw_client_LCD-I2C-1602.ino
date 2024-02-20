@@ -92,14 +92,12 @@ void LastTimeIDChangeLoop() {
 void setup() {
   pinMode(SSID_PIN, INPUT_PULLUP);
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
-  Serial.begin(115200);
 
   // For ESP8266
   //EEPROM.begin(EEPROM_SIZE);
   
   // For ESP32/ESP32s2
   if (!EEPROM.begin(EEPROM_SIZE)) {
-    Serial.println("failed to initialise EEPROM");
     delay(1000000);
   }
   if (EEPROM.read(0) >= 0 && EEPROM.read(0) < (sizeof(ssid) / sizeof(char *))) {

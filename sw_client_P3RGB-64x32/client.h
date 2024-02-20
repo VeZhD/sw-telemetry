@@ -50,12 +50,10 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
   switch (type) {
     case WStype_DISCONNECTED:
       ConnectedWS = false;
-      Serial.println("disconnected ws");
       break;
     case WStype_CONNECTED:
       {
         ConnectedWS = true;
-        Serial.println("Connected WS");
         webSocket.sendTXT("Connected");
       }
       break;
@@ -64,7 +62,6 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
       TimerState = payload_str.substring(1, 2).toInt();
       CurrentTime = payload_str.substring(2).toInt();
       StartTime = millis() - CurrentTime;
-      Serial.println(payload_str);
       SetTime();
       break;
     case WStype_BIN:
@@ -75,9 +72,13 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
       // answer to a ping we send
       break;
     case WStype_ERROR:
+      break;
     case WStype_FRAGMENT_TEXT_START:
+      break;
     case WStype_FRAGMENT_BIN_START:
+      break;
     case WStype_FRAGMENT:
+      break;
     case WStype_FRAGMENT_FIN:
       break;
   }
@@ -86,29 +87,21 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
 void WiFiEvent(WiFiEvent_t event) {
   switch (event) {
     case ARDUINO_EVENT_WIFI_READY:
-      Serial.println("ESP32 WiFi ready");
       break;
     case ARDUINO_EVENT_WIFI_SCAN_DONE:
-      Serial.println("ESP32 finish scanning AP");
       break;
     case ARDUINO_EVENT_WIFI_STA_START:
-      Serial.println("ESP32 station start");
       break;
     case ARDUINO_EVENT_WIFI_STA_STOP:
-      Serial.println("ESP32 station stop");
       break;
     case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-      Serial.println("wifi connected");
       Connected = true;
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-      Serial.println("wifi disconnected");
       Connected = false;
       break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-      Serial.println("Obtained IP address: ");
-      Serial.println(WiFi.localIP());
-      Serial.println(WiFi.gatewayIP());
+
       if (wsSSL[wifi_id] == true) {
         webSocket.beginSSL(wsHost[wifi_id], wsPort[wifi_id], wsPath[wifi_id]);
       } else {
@@ -121,10 +114,6 @@ void WiFiEvent(WiFiEvent_t event) {
 void connectToHost() {
   WiFi.disconnect(true);
   WiFi.begin(ssid[wifi_id], password[wifi_id]);
-  // server address, port and URL
-  Serial.println("connecting wifi...");
-  Serial.println(ssid[wifi_id]);
-  Serial.println(password[wifi_id]);
 }
 
 void CalcTopTime() {
