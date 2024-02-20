@@ -4,7 +4,7 @@
 ### Список компонентов
 
 ESP32 - [Lolin S2 mini](https://aliexpress.ru/item/1005003145192016.html?sku_id=12000024338777694), можно найти дешевле, но нужно чтобы обязательно был чип с PSRAM. 
-+ Так же есть поддержка ESP8266, тесты были на плате Lolin\Wemos D1 mini и Oled I2C дисплее 0,96" 128x64
++ Так же есть поддержка ESP8266, тесты были на плате Lolin\Wemos D1 mini и Oled I2C дисплее 0,96" 128x64.
 Но обязательно нужно проверить используемые пины, при использовании отличных плат от Lolin S2 mini и Wemos D1 mini
 
 OLED I2C display [2.4"](https://aliexpress.ru/item/1005005867315821.html?sku_id=12000034633566861) или [2.4"](https://aliexpress.ru/item/1005001565591155.html), [1.54"](https://aliexpress.ru/item/1005005317314760.html?sku_id=12000032606581542), [1.3"](https://aliexpress.ru/item/1005005438758215.html?sku_id=12000033085858096), [0.96"](https://aliexpress.ru/item/1005001603008505.html?sku_id=12000016754783852)
