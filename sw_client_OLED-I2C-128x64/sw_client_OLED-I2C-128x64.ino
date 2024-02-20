@@ -163,7 +163,6 @@ void setup() {
   
   // For ESP32/ESP32s2
   if (!EEPROM.begin(EEPROM_SIZE)) {
-    Serial.println("failed to initialise EEPROM");
     delay(1000000);
   }
   if ((EEPROM.read(3) >= 0) && (EEPROM.read(3) <= Font_Count)) {

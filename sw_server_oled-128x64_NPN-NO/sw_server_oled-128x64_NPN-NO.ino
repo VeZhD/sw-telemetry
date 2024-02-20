@@ -161,15 +161,16 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
              void *arg, uint8_t *data, size_t len) {
   switch (type) {
     case WS_EVT_CONNECT:
-      Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+//      Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
       break;
     case WS_EVT_DISCONNECT:
-      Serial.printf("WebSocket client #%u disconnected\n", client->id());
+//      Serial.printf("WebSocket client #%u disconnected\n", client->id());
       break;
     case WS_EVT_DATA:
       handleWebSocketMessage(arg, data, len);
       break;
     case WS_EVT_PONG:
+      break;
     case WS_EVT_ERROR:
       break;
   }
@@ -181,15 +182,14 @@ void initWebSocket(void) {
 }
 
 void setup() {
-  // Serial port for debugging purposes
   pinMode(SENSOR_PIN, INPUT_PULLUP);
 
-  Serial.begin(115200);
-  Serial.println();
-  Serial.println("Configuring access point...");
+//  Serial.begin(115200);
+//  Serial.println();
+//  Serial.println("Configuring access point...");
 
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
-    Serial.println(F("SSD1306 allocation failed"));
+//    Serial.println(F("SSD1306 allocation failed"));
     for (;;)
       ;  // Don't proceed, loop forever
   }
@@ -211,14 +211,14 @@ void setup() {
   apIP += String(myIP[2]) + ".";
   apIP += String(myIP[3]);
   //###################
-  Serial.print("AP IP address: ");
-  Serial.println(myIP);
+//  Serial.print("AP IP address: ");
+//  Serial.println(myIP);
 
   printip();
 
   server.begin();
 
-  Serial.println("Server started");
+//  Serial.println("Server started");
 
   initWebSocket();
 

@@ -294,7 +294,6 @@ void setup() {
   pinMode(BRIGHTNESS_PIN, INPUT_PULLUP); // пин кнопки яркости
 
   if (!EEPROM.begin(EEPROM_SIZE)) {
-    Serial.println("failed to initialise EEPROM");
     delay(1000000);
   }
   if ((EEPROM.read(3) >= 0) && (EEPROM.read(3) <= Font_Count)) {
@@ -307,7 +306,6 @@ void setup() {
     Brightness = EEPROM.read(5);
   }
 
-  Serial.begin(115200);
   WiFi.onEvent(WiFiEvent);
 
   dma_display->begin();
