@@ -124,10 +124,10 @@ void loop() {
   printWifiState();
   printWsState();
   PrintTime();
- if (LastTimeID_State_ts < millis() - 15000) {
+ if (LastTimeID_State_ts + 15000 < millis() ) {
     LastTimeID = LastTimeCount;
   }
-  if (ssid_state_ts > millis() - 5000) {
+  if (ssid_state_ts + 5000 > millis()) {
     printSSID();
   }
   else {

@@ -341,17 +341,17 @@ void loop() {
       break;
     default:
       PrintTime();
-      if (LastTimeID_State_ts < millis() - 7500) {
+      if (LastTimeID_State_ts + 7500 < millis() ) {
         LastTimeID = 0;
       }
       TimePrintXY(LastTime[LastTimeID], 0, int(MATRIX_HEIGHT - 7), "LT" + String(LastTimeID));
 
-      if (ssid_state_ts > millis() - 5500) {
+      if (ssid_state_ts + 5500 > millis() ) {
         PrintSSID();
       } else {
         TimePrintXY(TopTime, 1, int(MATRIX_HEIGHT - 14), "Top");
       }
-      if (Brightness_State_ts > millis() - 5000) {
+      if (Brightness_State_ts + 5500 > millis() ) {
         printBrightness();
       }
       else {

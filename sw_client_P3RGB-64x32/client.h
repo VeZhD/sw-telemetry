@@ -1,6 +1,6 @@
 bool ssid_state = HIGH;
 bool ssid_laststate = HIGH;
-uint32_t ssid_state_ts = millis();
+uint32_t ssid_state_ts =  10000 ;
 
 WebSocketsClient webSocket;
 
@@ -113,6 +113,36 @@ void WiFiEvent(WiFiEvent_t event) {
 }
 #endif
 
+#if defined(ESP8266)
+void WiFiEvent(WiFiEvent_t event) {
+  switch (event) {
+    case WIFI_EVENT_STAMODE_CONNECTED:
+      Serial.println("WIFI_EVENT_STAMODE_CONNECTED");
+      Connected = true;
+      break;
+    case WIFI_EVENT_STAMODE_AUTHMODE_CHANGE:
+      Serial.println("WIFI_EVENT_STAMODE_AUTHMODE_CHANGE");
+      break;
+    case WIFI_EVENT_STAMODE_GOT_IP:
+      Serial.println("WIFI_EVENT_STAMODE_GOT_IP");
+      Serial.println(WiFi.localIP().toString());
+      if (wsSSL[wifi_id] == true) {
+        webSocket.beginSSL(wsHost[wifi_id], wsPort[wifi_id], wsPath[wifi_id]);
+      } else {
+        webSocket.begin(wsHost[wifi_id], wsPort[wifi_id], wsPath[wifi_id]);
+      }
+      break;
+    case WIFI_EVENT_STAMODE_DISCONNECTED:
+      Serial.println("WIFI_EVENT_STAMODE_DISCONNECTED");
+      Connected = false;
+      break;
+    case WIFI_EVENT_SOFTAPMODE_PROBEREQRECVED:
+     Serial.println("WIFI_EVENT_SOFTAPMODE_PROBEREQRECVED");
+      break;
+
+  }
+}
+#endif
 
 void connectToHost() {
   WiFi.disconnect(true);
