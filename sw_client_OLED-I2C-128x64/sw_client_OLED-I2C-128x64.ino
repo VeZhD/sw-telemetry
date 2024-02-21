@@ -5,21 +5,29 @@ SDA -> D2(GPIO4) For ESP8266(Wemos D1 mini) / 33 For ESP32s2(Wemos(Lolin) S2 min
 VCC -> 5V
 GND -> GND
 *********/
-#define SSID_PIN      1   // пин кнопки переключения wifi сети
-#define FONT_PIN      2   // пин кнопки переключения шрифта
-#define LAST_TIME_PIN 3   // пин кнопки переключения предыдущего времени(1-10)
 
-
-#if defined(ESP8266)
-  #pragma message "ESP8266 stuff happening!"
-  #define SDA_PIN 4 // change for yours SDA pin on ESP8266
-  #define SCL_PIN 5 // changr for yours SCL pin on ESP8266
-  #include <ESP8266WiFi.h>
-#elif defined(ESP32)
+#if defined(ESP32)
   #pragma message "ESP32 stuff happening!"
   #define SDA_PIN 33 //change for yours SDA pin on ESP32\32s2\etc.
   #define SCL_PIN 35 //change for yours SCL pin on ESP32\32s2\etc.
+
+  #define SSID_PIN      34   // пин кнопки переключения wifi сети
+  #define FONT_PIN      36   // пин кнопки переключения шрифта
+  #define LAST_TIME_PIN 38   // пин кнопки переключения предыдущего времени(1-10)
+
   #include <WiFi.h>
+
+#elif defined(ESP8266)
+  #pragma message "ESP8266 stuff happening!"
+  #define SDA_PIN 4 // change for yours SDA pin on ESP8266
+  #define SCL_PIN 5 // changr for yours SCL pin on ESP8266
+
+  #define SSID_PIN      1   // пин кнопки переключения wifi сети
+  #define FONT_PIN      2   // пин кнопки переключения шрифта
+  #define LAST_TIME_PIN 3   // пин кнопки переключения предыдущего времени(1-10)
+  
+  #include <ESP8266WiFi.h>
+
 #else
 #error "This ain't a ESP8266 or ESP32, dumbo!"
 #endif

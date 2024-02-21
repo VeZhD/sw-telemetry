@@ -102,7 +102,6 @@ void WiFiEvent(WiFiEvent_t event) {
       Connected = false;
       break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-
       if (wsSSL[wifi_id] == true) {
         webSocket.beginSSL(wsHost[wifi_id], wsPort[wifi_id], wsPath[wifi_id]);
       } else {
