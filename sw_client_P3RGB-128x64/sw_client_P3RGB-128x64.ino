@@ -340,18 +340,18 @@ void loop() {
       break;
     default:
       PrintTime();
-      if (LastTimeID_State_ts < millis() - 7500) {
+      if (LastTimeID_State_ts + 7500 < millis() ) {
         LastTimeID = 0;
       }
       TimePrintXY(LastTime[LastTimeID], 0, 57, "LT" + String(LastTimeID));
       TimePrintXY(LastTime[LastTimeID + 1], 64, 57, "LT" + String(LastTimeID + 1));
 
-      if (ssid_state_ts > millis() - 5500) {
+      if (ssid_state_ts + 5500 > millis() ) {
         PrintSSID();
       } else {
         TimePrintXY(TopTime, 11, 48, "Top Time");
       }
-      if (Brightness_State_ts > millis() - 5000) {
+      if (Brightness_State_ts + 5500 > millis() ) {
         printBrightness();
       }
   }

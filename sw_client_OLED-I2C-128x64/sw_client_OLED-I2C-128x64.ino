@@ -5,9 +5,9 @@ SDA -> D2(GPIO4) For ESP8266(Wemos D1 mini) / 33 For ESP32s2(Wemos(Lolin) S2 min
 VCC -> 5V
 GND -> GND
 *********/
-#define SSID_PIN      34   // пин кнопки переключения wifi сети
-#define FONT_PIN      36   // пин кнопки переключения шрифта
-#define LAST_TIME_PIN 38   // пин кнопки переключения предыдущего времени(1-10)
+#define SSID_PIN      1   // пин кнопки переключения wifi сети
+#define FONT_PIN      2   // пин кнопки переключения шрифта
+#define LAST_TIME_PIN 3   // пин кнопки переключения предыдущего времени(1-10)
 
 
 #if defined(ESP8266)
@@ -165,21 +165,14 @@ void setup() {
   pinMode(FONT_PIN, INPUT_PULLUP);       // пин кнопки переключения шрифта
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
 
-#if defined(ESP8266)
-  // For ESP8266
-  EEPROM.begin(EEPROM_SIZE);
-  if (wsSSL[wifi_id] == true) {
-    webSocket.beginSSL(wsHost[wifi_id], wsPort[wifi_id], wsPath[wifi_id]);
-  } else {
-    webSocket.begin(wsHost[wifi_id], wsPort[wifi_id], wsPath[wifi_id]);
-  }
-#elif defined(ESP32)
+#if defined(ESP32)
   // For ESP32/ESP32s2
   if (!EEPROM.begin(EEPROM_SIZE)) {
     delay(1000000);
-  }
-  
-  WiFi.onEvent(WiFiEvent);
+  } 
+#elif defined(ESP8266)
+  // For ESP8266
+  EEPROM.begin(EEPROM_SIZE);
 #endif
 
   if ((EEPROM.read(3) >= 0) && (EEPROM.read(3) <= Font_Count)) {
@@ -195,7 +188,7 @@ void setup() {
 
   //myOLED.rotateDisplay(true); // переворот на 180 градусов
   //myOLED.setBrightness(255);
-  //WiFi.onEvent(WiFiEvent);
+  WiFi.onEvent(WiFiEvent);
 
   // event handler
   webSocket.onEvent(webSocketEvent);
@@ -203,9 +196,6 @@ void setup() {
 
   myOLED.clrScr();
   connectToHost();
-
-  printSSID();
-
 }
 
 void loop() {
@@ -223,7 +213,7 @@ void loop() {
   }
 
   TimePrintXY(LastTime[LastTimeID], 0, 40, "LastTime " + String(LastTimeID) + ": ");
-  if (ssid_state_ts < millis() - 9500) {
+  if (ssid_state_ts + 10000 < millis()) {
     TimePrintXY(TopTime, 0, 49, "  Top Time: ");
   } else {
     printSSID();
