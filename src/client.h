@@ -21,7 +21,7 @@ uint8_t CurrentmSeconds = 0;
 uint8_t CurrentmiSeconds = 0;
 uint8_t CurrentmilSeconds = 0;
 
-const uint8_t LastTimeCount = 11;
+const uint8_t LastTimeCount = 9;
 uint32_t LastTime[LastTimeCount];
 uint32_t LastCurrentTime = 0;
 uint8_t LastTimeID = 0;
