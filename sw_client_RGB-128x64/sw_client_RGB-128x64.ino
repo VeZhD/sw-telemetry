@@ -22,6 +22,7 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 #include <WiFi.h>
 #include <WebSocketsClient.h>
 #include <EEPROM.h>
+#include <ArduinoOTA.h>
 
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 
@@ -284,7 +285,7 @@ void setup() {
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
   pinMode(BRIGHTNESS_PIN, INPUT_PULLUP); // пин кнопки яркости
 
-  SW_Basic_OTA();
+//  SW_Basic_OTA();
 
   if (!EEPROM.begin(EEPROM_SIZE)) {
     delay(1000000);
@@ -315,7 +316,7 @@ void setup() {
 }
 
 void loop() {
-  ArduinoOTA.handle();
+//  ArduinoOTA.handle();
 
   TimerLoop();
   ssidChangeLoop();

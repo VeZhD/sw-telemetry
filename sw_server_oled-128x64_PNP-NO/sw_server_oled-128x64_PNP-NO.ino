@@ -18,6 +18,8 @@ GND -> GND
 #include <AsyncTCP.h>
 #include <ESPAsyncWebSrv.h>
 #include <DNSServer.h>
+#include <ArduinoOTA.h>
+
 #include <esp_timer.h>
 // */
 
@@ -195,7 +197,7 @@ void initWebSocket(void) {
 void setup() {
   pinMode(SENSOR_PIN, INPUT);
 
-  SW_Basic_OTA();
+//  SW_Basic_OTA();
 
 //  Serial.begin(115200);
 //  Serial.println();
@@ -245,7 +247,7 @@ void setup() {
 }
 
 void loop() {
-  ArduinoOTA.handle();
+//  ArduinoOTA.handle();
   dnsServer.processNextRequest();
 
   startStopState = digitalRead(SENSOR_PIN);
