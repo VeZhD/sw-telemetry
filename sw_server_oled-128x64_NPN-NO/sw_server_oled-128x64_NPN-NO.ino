@@ -6,6 +6,11 @@ VCC -> 5V
 GND -> GND
 *********/
 
+//#define SW_BASIC_OTA_HOSTNAME // Hostname для ESP при OTA обновлении через Arduino IDE, по-умолчанию - "SW_server", без ковычек
+//#define SW_BASIC_OTA_PASSWORD  // Паролья при OTA обновлении через Arduino IDE, по-умолчанию - "SW_serverPASSWORD", без ковычек
+
+#define SENSOR_PIN 6     // пин подключения датчика луча
+
 // Import required libraries for ESP32/ESP32s2/etc.
 // /*
 #include <WiFi.h>
@@ -39,7 +44,7 @@ int64_t esp_timer_get_time (void)
 
 #include "SSID_server.h"
 #include "html.h"
-//#include "server.h"
+#include "server.h"
 //#include "128x64.h"
 
 #define SCREEN_WIDTH 128     // OLED display width, in pixels
@@ -53,9 +58,6 @@ const char *server_name = "*"; //"sw";  // Can be "*" to all DNS requests
 
 bool ledState = 0;
 const int ledPin = 2;
-
-#define SENSOR_PIN 6     // пин подключения датчика луча
-#define LAST_TIME_PIN 39  // пин кнопки переключения предыдущего времени(1-10)
 
 int startStopState;
 String startStopStateName;
@@ -193,6 +195,8 @@ void initWebSocket(void) {
 void setup() {
   pinMode(SENSOR_PIN, INPUT_PULLUP);
 
+  SW_Basic_OTA();
+
 //  Serial.begin(115200);
 //  Serial.println();
 //  Serial.println("Configuring access point...");
@@ -242,6 +246,7 @@ void setup() {
 }
 
 void loop() {
+  ArduinoOTA.handle();
   dnsServer.processNextRequest();
 
   startStopState = !digitalRead(SENSOR_PIN);
