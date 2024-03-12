@@ -5,6 +5,8 @@ SDA -> D2(GPIO4) For ESP8266(Wemos D1 mini) / 33 For ESP32s2(Wemos(Lolin) S2 min
 VCC -> 5V
 GND -> GND
 *********/
+#define SW_Basic_OTA_HOSTNAME SWC_OLED  // HostName для ESP
+//#define SW_Basic_OTA_PASSWORD passwordSWC_OLED  // пароль для OTA обновления, по умолчанию "passwordSW_client", без ковычек
 
 #if defined(ESP32)
   #pragma message "ESP32 stuff happening!"
@@ -159,7 +161,9 @@ void setup() {
   pinMode(SSID_PIN, INPUT_PULLUP);
   pinMode(FONT_PIN, INPUT_PULLUP);       // пин кнопки переключения шрифта
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
-
+  
+  SW_Basic_OTA();
+  
 #if defined(ESP32)
   // For ESP32/ESP32s2
   if (!EEPROM.begin(EEPROM_SIZE)) {
@@ -194,6 +198,8 @@ void setup() {
 }
 
 void loop() {
+  ArduinoOTA.handle();
+
   TimerLoop();
   ssidChangeLoop();
   FontChangeLoop();

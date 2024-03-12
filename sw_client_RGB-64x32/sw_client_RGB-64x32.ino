@@ -7,7 +7,9 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 #define USE_GFX_ROOT
 #define NO_FAST_FUNCTIONS
 */
-#define DISPLAY_LASTTIME 2 // кол-во отображаемых значений последнего времени, обычно 1
+#define DISPLAY_LASTTIME 1 // кол-во отображаемых значений последнего времени, обычно 1
+#define SW_Basic_OTA_HOSTNAME SWC_RGB6432  // HostName для ESP
+//#define SW_Basic_OTA_PASSWORD passwordSWC_RGB6432  // пароль для OTA обновления, по умолчанию "passwordSW_client", без ковычек
 
 #define SSID_PIN 34        // пин кнопки переключения wifi сети
 #define FONT_PIN 36        // пин кнопки переключения шрифта
@@ -24,7 +26,7 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 
 #include "SSID_client.h"      // При необходимости изменить название и паролт WiFi точки доступа
 #include "client.h"
-#include "128x64.h"
+#include "64x32.h"
 
 // Подключение Матрицы
 #define R1_PIN 1
@@ -43,9 +45,10 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 #define OE_PIN 14
 
 // настройки размера матрицы
-#define MATRIX_WIDTH 128  // Number of pixels wide of each INDIVIDUAL panel module.
-#define MATRIX_HEIGHT 64  // Number of pixels tall of each INDIVIDUAL panel module.
+#define MATRIX_WIDTH 64   // Number of pixels wide of each INDIVIDUAL panel module.
+#define MATRIX_HEIGHT 32   // Number of pixels tall of each INDIVIDUAL panel module.
 #define CHAIN_LENGTH 1    // Total number of panels chained one to another
+
 HUB75_I2S_CFG::i2s_pins _pins = { R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN, OE_PIN, CLK_PIN };
 
 HUB75_I2S_CFG mxconfig(
@@ -64,7 +67,7 @@ const uint16_t BLACK_COLOR = dma_display->color444(0, 0, 0);
 byte Brightness = 155;
 bool Brightness_State = HIGH;
 bool Brightness_LastState = HIGH;
-uint32_t Brightness_State_ts = 0;
+uint32_t Brightness_State_ts = -5500;
 
 
 void updateDisplay() {
@@ -89,7 +92,7 @@ void printWsState() {
 }
 
 void PrintSSID() {
-  dma_display->setCursor(1, int(MATRIX_HEIGHT - 15));
+  dma_display->setCursor(1, int(MATRIX_HEIGHT - 14));
   dma_display->setTextSize(1);  // size 1 == 8 pixels high
   dma_display->setTextColor(dma_display->color444(222, 222, 222));
   dma_display->print(String(ssid[wifi_id]));
@@ -97,7 +100,7 @@ void PrintSSID() {
 
 void printBrightness() {
   dma_display->setTextColor(dma_display->color444(100, 100, 100));
-  dma_display->setCursor(int(MATRIX_WIDTH - 6 * 3), int(MATRIX_HEIGHT - 15));  // start at top left, with 8 pixel of spacing
+  dma_display->setCursor(int(MATRIX_WIDTH - 6 * 3), int(MATRIX_HEIGHT - 14));  // start at top left, with 8 pixel of spacing
   dma_display->setTextSize(1);
   dma_display->print(Brightness);
 }
@@ -128,46 +131,42 @@ void PrintTime() {
   }
 
   if (Font_ID == Font_Count) {
-    const uint8_t font_size = 4;
+      const uint8_t font_size = 2;
     dma_display->setTextWrap(false);  // Don't wrap at end of line - will do ourselves
-    dma_display->setCursor(0, 1);     // start at top left, with 8 pixel of spacing
+      dma_display->setCursor(1, 1);    // start at top left, with 8 pixel of spacing
     dma_display->setTextColor(TIME_COLOR);
     dma_display->setTextSize(font_size);  // size 1 == 8 pixels high
     dma_display->print(CurrentMinutes);
-    dma_display->fillRect(5 * font_size, 2 * font_size + 1, 3, 3, DOT_COLOR);  // двоеточие
-    dma_display->fillRect(5 * font_size, 4 * font_size + 2, 3, 3, DOT_COLOR);  // двоеточие
-    dma_display->setCursor(5 * font_size + 4, 1);
+      dma_display->fillRect(12, 5, 2, 2, DOT_COLOR); // двоеточие 
+      dma_display->fillRect(12, 9, 2, 2, DOT_COLOR); // двоеточие 
+      dma_display->setCursor(15, 1);    // start at top left, with 8 pixel of spacing
     dma_display->print(CurrenttSeconds);
-    dma_display->setCursor(10 * font_size + 5, 1);
     dma_display->print(Currentseconds);
-    dma_display->fillRect(15 * font_size + 4, 6 * font_size + 1, font_size, font_size, DOT_COLOR);  // точка перед милисикундами
-    dma_display->setCursor(15 * font_size + 7, 1);
+      dma_display->fillRect(38, 13, 2, 2, DOT_COLOR); // точка перед милисикундами
+      dma_display->setCursor(41, 1);    // start at top left, with 8 pixel of spacing
     dma_display->print(CurrentmSeconds);
-    dma_display->setCursor(20 * font_size + 8, 1);
     dma_display->print(CurrentmiSeconds);
-    dma_display->setCursor(25 * font_size + 9, 1);
-    dma_display->print(CurrentmilSeconds);
   } else {
-    int dX = 0;
+    int dX = -1;
     // Minutes
     drawDigit(dX + 0, CurrentMinutes);
     // Seconds
-    drawDigit(dX + (1 * SizeX) + 5, CurrenttSeconds);
-    drawDigit(dX + (2 * SizeX) + 6, Currentseconds);
+    drawDigit(dX + (1 * SizeX) + 4, CurrenttSeconds);
+    drawDigit(dX + (2 * SizeX) + 5, Currentseconds);
     // milliseconds
-    drawDigit(dX + (3 * SizeX) + 11, CurrentmSeconds);
-    drawDigit(dX + (4 * SizeX) + 12, CurrentmiSeconds);
-    drawDigit(dX + (5 * SizeX) + 13, CurrentmilSeconds);
+    drawDigit(dX + (3 * SizeX) + 9, CurrentmSeconds);
+    drawDigit(dX + (4 * SizeX) + 10, CurrentmiSeconds);
+    drawDigit(dX + (5 * SizeX) + 11, CurrentmilSeconds);
     // Двоеточие
-    dma_display->fillRect(dX + (1 * SizeX) + 1, int(SizeY / 3), 3, 3, DOT_COLOR);
-    dma_display->fillRect(dX + (1 * SizeX) + 1, int(SizeY - SizeY / 3), 3, 3, DOT_COLOR);
+    dma_display->fillRect(dX + (1 * SizeX) + 1, int(SizeY / 3), 2, 2, DOT_COLOR);
+    dma_display->fillRect(dX + (1 * SizeX) + 1, int(SizeY - SizeY / 3), 2, 2, DOT_COLOR);
     // Точка
-    dma_display->fillRect(dX + (3 * SizeX) + 7, SizeY - 3, 3, 3, DOT_COLOR);
+    dma_display->fillRect(dX + (3 * SizeX) + 6, SizeY - 2, 2, 2, DOT_COLOR);
   }
 }
 
 void PrintTimeSeconds() {
-  const uint8_t font_size = 8;
+  const uint8_t font_size = 4;
   const uint8_t dy = 4;
   const uint8_t dot = (font_size / 2 + 1);
 
@@ -185,7 +184,7 @@ void PrintTimeSeconds() {
 }
 
 void PrintTimeMilSeconds() {
-  const uint8_t font_size = 8;
+  const uint8_t font_size = 4;
   const uint8_t dy = 4;
   const uint8_t dot = (font_size / 2 + 1);
 
@@ -266,10 +265,14 @@ void BrightnessChangeLoop() {
 
 void PrintCopyright(void) {
   dma_display->setTextColor(TIME_COLOR);
-  dma_display->setCursor(8, 8);  // int(MATRIX_HEIGHT - 16));
-  dma_display->print("Made by VeZhD");
-  dma_display->setCursor(5, 16);  // int(MATRIX_HEIGHT - 8));
-  dma_display->print("Code from Alekssaff");
+  dma_display->setCursor(8, 1);
+  dma_display->print("Made by");
+  dma_display->setCursor(14, 9);
+  dma_display->print("VeZhD");
+  dma_display->setCursor(5, 17);
+  dma_display->print("Code from");
+  dma_display->setCursor(5, 25);
+  dma_display->print("Alekssaff");
   updateDisplay();
   delay(1500);
   dma_display->clearScreen();
@@ -280,6 +283,8 @@ void setup() {
   pinMode(FONT_PIN, INPUT_PULLUP);       // пин кнопки переключения шрифта
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
   pinMode(BRIGHTNESS_PIN, INPUT_PULLUP); // пин кнопки яркости
+
+  SW_Basic_OTA();
 
   if (!EEPROM.begin(EEPROM_SIZE)) {
     delay(1000000);
@@ -310,6 +315,8 @@ void setup() {
 }
 
 void loop() {
+  ArduinoOTA.handle();
+
   TimerLoop();
   ssidChangeLoop();
   FontChangeLoop();
@@ -329,19 +336,18 @@ void loop() {
       break;
     default:
       PrintTime();
-      TimePrintXY(LastTime[LastTimeID], 0, 57, "LT" + String(LastTimeID));
-      TimePrintXY(LastTime[LastTimeID + 1], 64, 57, "LT" + String(LastTimeID + 1));
+      TimePrintXY(LastTime[LastTimeID], 0, int(MATRIX_HEIGHT - 7), "LT" + String(LastTimeID));
 
       if (ssid_state_ts + 5500 > millis() ) {
         PrintSSID();
       } else {
-        TimePrintXY(TopTime, 11, 48, "Top Time");
+        TimePrintXY(TopTime, 1, int(MATRIX_HEIGHT - 14), "Top");
       }
       if (Brightness_State_ts + 5500 > millis() ) {
         printBrightness();
       }
-  }
 
+  }
   updateDisplay();
   delay(1);
 }

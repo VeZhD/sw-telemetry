@@ -6,6 +6,8 @@ VCC -> 5V
 GND -> GND
 *********/
 #define DISPLAY_LASTTIME 0
+#define SW_Basic_OTA_HOSTNAME SWC_LCD1602  // HostName для ESP
+//#define SW_Basic_OTA_PASSWORD passwordSWC_LCD1602  // пароль для OTA обновления, по умолчанию "passwordSW_client", без ковычек
 
 #define SSID_PIN      34    // пин кнопки переключения wifi сети
 #define LAST_TIME_PIN 38    // пин кнопки переключения предыдущего времени(1-10)
@@ -81,14 +83,16 @@ void PrintCopyright(void) {
 void setup() {
   pinMode(SSID_PIN, INPUT_PULLUP);
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
-
+  
+  SW_Basic_OTA();
+  
   // For ESP8266
   //EEPROM.begin(EEPROM_SIZE);
-  
   // For ESP32/ESP32s2
   if (!EEPROM.begin(EEPROM_SIZE)) {
     delay(1000000);
   }
+
   if (EEPROM.read(0) >= 0 && EEPROM.read(0) < (sizeof(ssid) / sizeof(char *))) {
     wifi_id = EEPROM.read(0);
   }
@@ -106,6 +110,8 @@ void setup() {
 }
 
 void loop() {
+  ArduinoOTA.handle();
+
   TimerLoop();
   ssidChangeLoop();
   LastTimeIDChangeLoop();
