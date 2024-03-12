@@ -2,4 +2,6 @@
 .vscode/
 settings.json
 .DS_store
+sw_server_oled-128x64_NPN-NO_HotPlug-display
+sw_server_oled-128x64_NPN-NO_HotPlug-display/
 sw_server_oled-128x64_NPN-NO_HotPlug-display/*
