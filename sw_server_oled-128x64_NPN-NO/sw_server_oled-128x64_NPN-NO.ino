@@ -38,7 +38,8 @@ int64_t esp_timer_get_time (void)
 #include <Adafruit_SSD1306.h>
 
 #include "SSID_server.h"
-#include "server.h"
+#include "html.h"
+//#include "server.h"
 //#include "128x64.h"
 
 #define SCREEN_WIDTH 128     // OLED display width, in pixels
