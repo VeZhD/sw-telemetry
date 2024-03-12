@@ -20,6 +20,7 @@ GND -> GND
 //#include <ESP8266WiFi.h>
 #include <WebSocketsClient.h>
 #include <EEPROM.h>
+#include <ArduinoOTA.h>
 
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
@@ -84,7 +85,7 @@ void setup() {
   pinMode(SSID_PIN, INPUT_PULLUP);
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
   
-  SW_Basic_OTA();
+  //SW_Basic_OTA();
   
   // For ESP8266
   //EEPROM.begin(EEPROM_SIZE);
@@ -110,7 +111,7 @@ void setup() {
 }
 
 void loop() {
-  ArduinoOTA.handle();
+  //ArduinoOTA.handle();
 
   TimerLoop();
   ssidChangeLoop();

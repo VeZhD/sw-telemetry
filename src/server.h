@@ -3,11 +3,11 @@
 #endif
 
 #ifndef SW_BASIC_OTA_HOSTNAME
-#define SW_BASIC_OTA_HOSTNAME SW_server
+#define SW_BASIC_OTA_HOSTNAME "SW_server"
 #endif
 
 #ifndef SW_BASIC_OTA_PASSWORD
-#define SW_BASIC_OTA_PASSWORD SW_serverPASSWORD
+#define SW_BASIC_OTA_PASSWORD "SW_serverPASSWORD"
 #endif
 
 void SW_Basic_OTA() {

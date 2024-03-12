@@ -38,6 +38,7 @@ GND -> GND
 
 #include <WebSocketsClient.h>
 #include <EEPROM.h>
+#include <ArduinoOTA.h>
 
 #include <OLED_I2C.h>
 
@@ -162,7 +163,7 @@ void setup() {
   pinMode(FONT_PIN, INPUT_PULLUP);       // пин кнопки переключения шрифта
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
   
-  SW_Basic_OTA();
+//  SW_Basic_OTA();
   
 #if defined(ESP32)
   // For ESP32/ESP32s2
@@ -198,7 +199,7 @@ void setup() {
 }
 
 void loop() {
-  ArduinoOTA.handle();
+//  ArduinoOTA.handle();
 
   TimerLoop();
   ssidChangeLoop();
