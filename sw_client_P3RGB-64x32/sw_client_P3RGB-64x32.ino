@@ -7,6 +7,8 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 #define USE_GFX_ROOT
 #define NO_FAST_FUNCTIONS
 */
+#define DISPLAY_LASTTIME 1 // кол-во отображаемых значений последнего времени, обычно 1
+
 #define SSID_PIN 34        // пин кнопки переключения wifi сети
 #define FONT_PIN 36        // пин кнопки переключения шрифта
 #define LAST_TIME_PIN 38   // пин кнопки переключения предыдущего времени(1-10)
@@ -63,7 +65,7 @@ const uint16_t BLACK_COLOR = dma_display->color444(0, 0, 0);
 byte Brightness = 155;
 bool Brightness_State = HIGH;
 bool Brightness_LastState = HIGH;
-uint32_t Brightness_State_ts = 0;
+uint32_t Brightness_State_ts = -5500;
 
 
 void updateDisplay() {
@@ -242,19 +244,6 @@ void FontChangeLoop() {
   Font_LastState = Font_State;
 }
 
-void LastTimeIDChangeLoop() {
-  LastTimeID_State = digitalRead(LAST_TIME_PIN);
-  if (LastTimeID_State == LOW && LastTimeID_LastState == HIGH) {
-    if (LastTimeID >= 0 && LastTimeID < LastTimeCount - 1) {
-      LastTimeID++;
-    } else {
-      LastTimeID = 0;
-    }
-    LastTimeID_State_ts = millis();
-  }
-  LastTimeID_LastState = LastTimeID_State;
-}
-
 void BrightnessChangeLoop() {
   Brightness_State = digitalRead(BRIGHTNESS_PIN);
   if (Brightness_State == LOW && Brightness_LastState == HIGH) {
@@ -341,9 +330,6 @@ void loop() {
       break;
     default:
       PrintTime();
-      if (LastTimeID_State_ts + 7500 < millis() ) {
-        LastTimeID = 0;
-      }
       TimePrintXY(LastTime[LastTimeID], 0, int(MATRIX_HEIGHT - 7), "LT" + String(LastTimeID));
 
       if (ssid_state_ts + 5500 > millis() ) {
@@ -354,9 +340,7 @@ void loop() {
       if (Brightness_State_ts + 5500 > millis() ) {
         printBrightness();
       }
-      else {
-        TimePrintXY(TopTime, 1, int(MATRIX_HEIGHT - 14), "Top");
-      }
+
   }
   updateDisplay();
   delay(1);

@@ -1,3 +1,8 @@
+#ifndef DISPLAY_LASTTIME
+#define DISPLAY_LASTTIME 1
+#endif
+
+
 bool ssid_state = HIGH;
 bool ssid_laststate = HIGH;
 uint32_t ssid_state_ts =  10000 ;
@@ -21,7 +26,7 @@ uint8_t CurrentmSeconds = 0;
 uint8_t CurrentmiSeconds = 0;
 uint8_t CurrentmilSeconds = 0;
 
-const uint8_t LastTimeCount = 9;
+const uint8_t LastTimeCount = 100;
 uint32_t LastTime[LastTimeCount];
 uint32_t LastCurrentTime = 0;
 uint8_t LastTimeID = 0;
@@ -162,9 +167,11 @@ void ResetTime() {
   TimerState = LOW;
   TimerLastState = LOW;
   TopTime = 599999;
+  
   for (int i = LastTimeCount - 1; i >= 0; i--) {
     LastTime[i] = 0;
   }
+
 }
 
 void ssidChangeLoop() {
@@ -205,4 +212,22 @@ void TimerLoop() {
     TimerLastState = TimerState;
   }
   SetTime();
+}
+
+void LastTimeIDChangeLoop() {
+  LastTimeID_State = digitalRead(LAST_TIME_PIN);
+  if (LastTimeID_State == LOW && LastTimeID_LastState == HIGH) {
+    if ( LastTimeID >= 0 && LastTimeID < LastTimeCount - DISPLAY_LASTTIME && LastTime[LastTimeID + DISPLAY_LASTTIME] > 1 ) {
+      LastTimeID++;
+    } else {
+      LastTimeID = 0;
+    }
+    LastTimeID_State_ts = millis();
+  }
+  
+  LastTimeID_LastState = LastTimeID_State;
+  
+  if (LastTimeID_State_ts + 10500 < millis()) {
+    LastTimeID = 0;
+  }
 }
