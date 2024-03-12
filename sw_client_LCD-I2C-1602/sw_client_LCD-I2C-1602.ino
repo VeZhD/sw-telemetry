@@ -5,6 +5,8 @@ SDA -> D2(GPIO4) For ESP8266(Wemos D1 mini) / 33 For ESP32s2(Wemos(Lolin) S2 min
 VCC -> 5V
 GND -> GND
 *********/
+#define DISPLAY_LASTTIME 0
+
 #define SSID_PIN      34    // пин кнопки переключения wifi сети
 #define LAST_TIME_PIN 38    // пин кнопки переключения предыдущего времени(1-10)
 
@@ -76,19 +78,6 @@ void PrintCopyright(void) {
   delay(750);
 }
 
-void LastTimeIDChangeLoop() {
-  LastTimeID_State = digitalRead(LAST_TIME_PIN);
-  if (LastTimeID_State == LOW && LastTimeID_LastState == HIGH) {
-    if (LastTimeID >= 0 && LastTimeID < LastTimeCount) {
-      LastTimeID++;
-    } else {
-      LastTimeID = 0;
-    }
-    LastTimeID_State_ts = millis();
-  }
-  LastTimeID_LastState = LastTimeID_State;
-}
-
 void setup() {
   pinMode(SSID_PIN, INPUT_PULLUP);
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
@@ -124,19 +113,18 @@ void loop() {
   printWifiState();
   printWsState();
   PrintTime();
- if (LastTimeID_State_ts + 15000 < millis() ) {
-    LastTimeID = LastTimeCount;
-  }
+
   if (ssid_state_ts + 5000 > millis()) {
     printSSID();
   }
   else {
-    if (LastTimeID == LastTimeCount) {
+    if (LastTimeID == 0) {
       TimePrintXY(TopTime, 0, 1, " Top: ");
     } 
     else {
-      TimePrintXY(LastTime[LastTimeID], 0, 1, "Last" +  String(LastTimeID) + ": ");
+      TimePrintXY(LastTime[LastTimeID - 1], 0, 1, "Last" +  String(LastTimeID - 1) + ": ");
     }
   }
+  
   delay(1);
 }

@@ -224,7 +224,8 @@ void setup() {
 
   printip();
 
-  server.begin();
+  // А нужна ли эта строчка?
+  //sserver.begin();
 
 //  Serial.println("Server started");
 

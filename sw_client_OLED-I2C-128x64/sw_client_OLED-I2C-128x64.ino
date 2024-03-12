@@ -145,19 +145,6 @@ void FontChangeLoop() {
   Font_LastState = Font_State;
 }
 
-void LastTimeIDChangeLoop() {
-  LastTimeID_State = digitalRead(LAST_TIME_PIN);
-  if (LastTimeID_State == LOW && LastTimeID_LastState == HIGH) {
-    if (LastTimeID >= 0 && LastTimeID < LastTimeCount - 1) {
-      LastTimeID++;
-    } else {
-      LastTimeID = 0;
-    }
-    LastTimeID_State_ts = millis();
-  }
-  LastTimeID_LastState = LastTimeID_State;
-}
-
 void PrintCopyright(void) {
   myOLED.clrScr();
   myOLED.setFont(SmallFont);
@@ -216,15 +203,12 @@ void loop() {
   printWsState();
   PrintTime();
 
- if (LastTimeID_State_ts < millis() - 10500) {
-    LastTimeID = 0;
-  }
-
   TimePrintXY(LastTime[LastTimeID], 0, 40, "LastTime " + String(LastTimeID) + ": ");
-  if (ssid_state_ts + 10000 < millis()) {
-    TimePrintXY(TopTime, 0, 49, "  Top Time: ");
-  } else {
+  
+  if (ssid_state_ts + 5000 > millis()) {
     printSSID();
+  } else {
+    TimePrintXY(TopTime, 0, 49, "  Top Time: ");
   }
   myOLED.update();
   delay(1);
