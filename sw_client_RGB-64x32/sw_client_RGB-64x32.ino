@@ -285,8 +285,6 @@ void setup() {
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
   pinMode(BRIGHTNESS_PIN, INPUT_PULLUP); // пин кнопки яркости
 
-//  SW_Basic_OTA();
-
   if (!EEPROM.begin(EEPROM_SIZE)) {
     delay(1000000);
   }
@@ -313,10 +311,12 @@ void setup() {
   PrintCopyright();
   updateDisplay();
   connectToHost();
+
+  SW_Basic_OTA();
 }
 
 void loop() {
-//  ArduinoOTA.handle();
+  ArduinoOTA.handle();
 
   TimerLoop();
   ssidChangeLoop();

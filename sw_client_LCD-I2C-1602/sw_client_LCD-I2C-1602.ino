@@ -84,9 +84,7 @@ void PrintCopyright(void) {
 void setup() {
   pinMode(SSID_PIN, INPUT_PULLUP);
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
-  
-  //SW_Basic_OTA();
-  
+    
   // For ESP8266
   //EEPROM.begin(EEPROM_SIZE);
   // For ESP32/ESP32s2
@@ -108,10 +106,12 @@ void setup() {
   PrintCopyright();
   connectToHost();
   lcd.clear();
+
+  SW_Basic_OTA();
 }
 
 void loop() {
-  //ArduinoOTA.handle();
+  ArduinoOTA.handle();
 
   TimerLoop();
   ssidChangeLoop();
