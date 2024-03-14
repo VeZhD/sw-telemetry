@@ -3,11 +3,11 @@
 #endif
 
 #ifndef SW_BASIC_OTA_HOSTNAME
-#define SW_BASIC_OTA_HOSTNAME SW_client
+#define SW_BASIC_OTA_HOSTNAME "SW_client"
 #endif
 
 #ifndef SW_BASIC_OTA_PASSWORD
-#define SW_BASIC_OTA_PASSWORD passwordSW_client
+#define SW_BASIC_OTA_PASSWORD "passwordSW_client"
 #endif
 
 bool ssid_state = HIGH;
