@@ -12,7 +12,7 @@
 
 bool ssid_state = HIGH;
 bool ssid_laststate = HIGH;
-uint32_t ssid_state_ts =  10000 ;
+uint32_t ssid_state_ts =  millis() ;
 
 WebSocketsClient webSocket;
 
