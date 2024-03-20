@@ -9,6 +9,8 @@ GND -> GND
 //#define SW_BASIC_OTA_HOSTNAME // Hostname для ESP при OTA обновлении через Arduino IDE, по-умолчанию - "SW_server", без ковычек
 //#define SW_BASIC_OTA_PASSWORD  // Паролья при OTA обновлении через Arduino IDE, по-умолчанию - "SW_serverPASSWORD", без ковычек
 
+#define DEFAULTS
+
 #define SENSOR_PIN 6     // пин подключения датчика луча
 
 // Import required libraries for ESP32/ESP32s2/etc.
