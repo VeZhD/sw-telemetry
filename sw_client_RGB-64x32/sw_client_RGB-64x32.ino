@@ -7,6 +7,8 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 #define USE_GFX_ROOT
 #define NO_FAST_FUNCTIONS
 */
+#define DEFAULT
+
 #define DISPLAY_LASTTIME 1 // кол-во отображаемых значений последнего времени, обычно 1
 #define SW_Basic_OTA_HOSTNAME SWC_RGB6432  // HostName для ESP
 //#define SW_Basic_OTA_PASSWORD passwordSWC_RGB6432  // пароль для OTA обновления, по умолчанию "passwordSW_client", без ковычек
@@ -124,11 +126,11 @@ void drawDigit(int ddX, int digit) {
 void PrintTime() {
 
   if (StartStopState == 0) {
-    TIME_COLOR = dma_display->color444(0, 255, 0);
-    DOT_COLOR = dma_display->color444(255, 0, 0);
-  } else {
     TIME_COLOR = dma_display->color444(255, 0, 0);
     DOT_COLOR = dma_display->color444(0, 255, 0);
+  } else {
+    TIME_COLOR = dma_display->color444(0, 255, 0);
+    DOT_COLOR = dma_display->color444(255, 0, 0);
   }
 
   if (Font_ID == Font_Count) {
@@ -350,5 +352,5 @@ void loop() {
 
   }
   updateDisplay();
-  delay(1);
+  //delay(1);
 }
