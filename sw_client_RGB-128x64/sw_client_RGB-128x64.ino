@@ -7,6 +7,7 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 #define USE_GFX_ROOT
 #define NO_FAST_FUNCTIONS
 */
+#define DEFAULT
 
 #define DISPLAY_LASTTIME 2 // кол-во отображаемых значений последнего времени, обычно 1
 #define SW_Basic_OTA_HOSTNAME SWC_RGB12864  // HostName для ESP
@@ -124,11 +125,11 @@ void drawDigit(int ddX, int digit) {
 void PrintTime() {
 
   if (StartStopState == 0) {
-    TIME_COLOR = dma_display->color444(0, 255, 0);
-    DOT_COLOR = dma_display->color444(255, 0, 0);
-  } else {
     TIME_COLOR = dma_display->color444(255, 0, 0);
     DOT_COLOR = dma_display->color444(0, 255, 0);
+  } else {
+    TIME_COLOR = dma_display->color444(0, 255, 0);
+    DOT_COLOR = dma_display->color444(255, 0, 0);
   }
 
   if (Font_ID == Font_Count) {
@@ -285,8 +286,6 @@ void setup() {
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
   pinMode(BRIGHTNESS_PIN, INPUT_PULLUP); // пин кнопки яркости
 
-//  SW_Basic_OTA();
-
   if (!EEPROM.begin(EEPROM_SIZE)) {
     delay(1000000);
   }
@@ -313,10 +312,11 @@ void setup() {
   PrintCopyright();
   updateDisplay();
   connectToHost();
+  SW_Basic_OTA();
 }
 
 void loop() {
-//  ArduinoOTA.handle();
+  ArduinoOTA.handle();
 
   TimerLoop();
   ssidChangeLoop();
@@ -351,5 +351,5 @@ void loop() {
   }
 
   updateDisplay();
-  delay(1);
+  //delay(1);
 }
