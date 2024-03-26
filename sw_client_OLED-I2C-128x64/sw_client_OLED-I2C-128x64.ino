@@ -5,6 +5,7 @@ SDA -> D2(GPIO4) For ESP8266(Wemos D1 mini) / 33 For ESP32s2(Wemos(Lolin) S2 min
 VCC -> 5V
 GND -> GND
 *********/
+#define DEFAULT_00
 #define SW_Basic_OTA_HOSTNAME "SWC_OLED"  // HostName для ESP, по умолчанию "SW_client", без ковычек
 //#define SW_Basic_OTA_PASSWORD "passwordSWC_OLED"  // пароль для OTA обновления, по умолчанию "passwordSW_client", без ковычек
 
@@ -134,6 +135,7 @@ void TimePrintXY(uint32_t time, byte x, byte y, String name) {
 }
 
 void FontChangeLoop() {
+
   Font_State = digitalRead(FONT_PIN);
   if (Font_State == LOW && Font_LastState == HIGH) {
     if (Font_ID >= 0 && Font_ID < Font_Count) {
@@ -219,5 +221,5 @@ void loop() {
     TimePrintXY(TopTime, 0, 49, "Top Time: ");
   }
   myOLED.update();
-  delay(1);
+  //delay(1);
 }
