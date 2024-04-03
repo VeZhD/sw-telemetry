@@ -9,7 +9,7 @@ GND -> GND
 #define SW_Basic_OTA_HOSTNAME "SWC_WS2812b"  // HostName для ESP, по умолчанию "SW_client", без ковычек
 //#define SW_Basic_OTA_PASSWORD "passwordSWC_WS2812b"  // пароль для OTA обновления, по умолчанию "passwordSW_client", без ковычек
 
-#include <FastLED.h>
+//#include <FastLED.h>
 
 #if defined(ESP32)
   #pragma message "ESP32 stuff happening!"
@@ -19,11 +19,12 @@ GND -> GND
   #define LAST_TIME_PIN   34  // пин кнопки переключения предыдущего времени(1-10)
   #define BRIGHTNESS_PIN  36  // пин кнопки яркости
 
-  #define DATA_PIN        17  // пин подключния матрицы
+  #define DATA_PIN        16  // пин подключния матрицы
 
   #include <WiFi.h>
 
 #elif defined(ESP8266)
+  // с ESP8266 не было полноценных тестов, возможно что-то отвалится, возможно нужно переназначить пины
   #pragma message "ESP8266 stuff happening!"
 
   #define SSID_PIN        16  // пин кнопки переключения wifi сети
@@ -31,7 +32,7 @@ GND -> GND
   #define LAST_TIME_PIN   12  // пин кнопки переключения предыдущего времени(1-10)
   #define BRIGHTNESS_PIN  13  // пин кнопки яркости
 
-  #define DATA_PIN         12  // пин подключения матрице
+  #define DATA_PIN         4  // пин подключения матрице
 
   #include <ESP8266WiFi.h>
 
@@ -45,18 +46,30 @@ GND -> GND
 #include <EEPROM.h>
 #include <ArduinoOTA.h>
 
+#include <Adafruit_NeoMatrix.h>
+
 #include "SSID_client.h"      // При необходимости изменить название и паролт WiFi точки доступа
 #include "client.h"
 #include "32x8.h"
 
-byte Brightness = 20;
+byte Brightness = 5;
 bool Brightness_State = HIGH;
 bool Brightness_LastState = HIGH;
 uint32_t Brightness_State_ts = 0;
 
-uint32_t DotColor = CRGB::Black;
-uint32_t NumbersColor = CRGB::Black;
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(32, 8, DATA_PIN,
+  NEO_MATRIX_BOTTOM + NEO_MATRIX_RIGHT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
+  NEO_GRB + NEO_KHZ800);
 
+const uint16_t colors[] = {matrix.Color(255, 0, 0), matrix.Color(0, 255, 0), matrix.Color(0, 0, 255)};
+
+uint16_t DotColor = matrix.Color(255, 0, 0);
+uint16_t NumbersColor = matrix.Color(0, 255, 0);
+
+//uint32_t DotColor = CRGB::Black;
+//uint32_t NumbersColor = CRGB::Black;
+
+/*
 #define NUM_LEDS 256
 
 // Описание матрицы, возможно есть лишнее
@@ -68,7 +81,9 @@ uint32_t NumbersColor = CRGB::Black;
 #define HEIGHT 8
 #define SEGMENTS 1
 
-CRGB leds[NUM_LEDS];
+
+
+//CRGB leds[NUM_LEDS];
 
 #if (CONNECTION_ANGLE == 1 && STRIP_DIRECTION == 3)
 #define _WIDTH HEIGHT
@@ -85,7 +100,7 @@ CRGB leds[NUM_LEDS];
 
 // функция отрисовки точки по координатам X Y
 void drawPixelXY(int x, int y, uint32_t color) {
-  leds[getPixelNumber(x, y)] = color;
+//  leds[getPixelNumber(x, y)] = color;
 }
 
 // получить номер пикселя в ленте по координатам
@@ -96,14 +111,14 @@ uint16_t getPixelNumber(int x, int y) {
     return (THIS_Y * _WIDTH + _WIDTH - THIS_X - 1);
   }
 }
-
+*/
 void printWifiState() {
   if (Connected == true) {
-    NumbersColor = CRGB::Green;
+    //NumbersColor = CRGB::Green;
     //myOLED.setFont(SmallFont);
     //myOLED.print("Wifi: ON ", 0, 57);
   } else {
-    NumbersColor = CRGB::White;
+    //NumbersColor = CRGB::Blue;
     //myOLED.setFont(SmallFont);
     //myOLED.print("Wifi: OFF", 0, 57);
   }
@@ -111,11 +126,11 @@ void printWifiState() {
 
 void printWsState() {
   if (ConnectedWS == true) {
-    DotColor = CRGB::Red;
+    //DotColor = CRGB::Red;
     //myOLED.setFont(SmallFont);
     //myOLED.print("/ WS: ON ", 64, 57);
   } else {
-    DotColor = CRGB::Black;
+    //DotColor = CRGB::Black;
     //myOLED.setFont(SmallFont);
     //myOLED.print("/ WS: OFF", 64, 57);
   }
@@ -128,20 +143,16 @@ void printSSID() {
   //myOLED.update();
 }
 
-void drawDigit(int dX, int digit, uint32_t color) {
+void drawDigit(int dX, int digit, uint16_t color) {
   for (int y = 0; y < 8; y++) {
     for (int x = 0; x < 4; x++) {
       if (digits[digit][y][x] == 1) {
-        drawPixelXY(x + dX, abs(y - 7), color);
+        matrix.drawPixel(x + dX, y, color);
       }
-      /*
-      else {
-        drawPixelXY(x + dX, abs(y - 7), CRGB::Black);
-      }
-      */
     }
   }
 }
+
 void PrintTime() {
 
   int dX = 0;
@@ -149,8 +160,8 @@ void PrintTime() {
   drawDigit(dX, CurrentMinutes, NumbersColor);
   // dots
   dX = 4;
-  drawPixelXY(1 + dX, 3, DotColor);
-  drawPixelXY(1 + dX, 5, DotColor);
+  matrix.drawPixel(1 + dX, 3, DotColor);
+  matrix.drawPixel(1 + dX, 5, DotColor);
 
   // tSeconds
   dX = 7;
@@ -160,7 +171,7 @@ void PrintTime() {
   drawDigit(dX, Currentseconds, NumbersColor);
   // dot
   dX = 16;
-  drawPixelXY(1 + dX, 0, DotColor);
+  matrix.drawPixel(1 + dX, 7, DotColor);
   //drawDot(dX, NumbersColor);
   dX = 18;
   drawDigit(dX, CurrentmSeconds, NumbersColor);
@@ -168,6 +179,18 @@ void PrintTime() {
   drawDigit(dX, CurrentmiSeconds, NumbersColor);
   dX = 28;
   drawDigit(dX, CurrentmilSeconds, NumbersColor);
+/*
+  matrix.setCursor(0, 0);                     // Отступ сверху
+  matrix.print(CurrentMinutes);
+  matrix.setCursor(4, 0);                     // Отступ сверху
+  matrix.print(":");
+  matrix.setCursor(8, 0);                     // Отступ сверху
+  matrix.print(String(CurrenttSeconds) + String(Currentseconds));
+  matrix.setCursor(17, 0);                     // Отступ сверху
+  matrix.print(".");
+  matrix.setCursor(21, 0);                     // Отступ сверху
+  matrix.print(String(CurrentmSeconds) + String(CurrentmiSeconds));
+*/
 }
 
 void TimePrintXY(uint32_t time, byte x, byte y, String name) {
@@ -199,26 +222,17 @@ void FontChangeLoop() {
   Font_LastState = Font_State;
 }
 
-void PrintCopyright(void) {
-  //myOLED.clrScr();
-  //myOLED.setFont(SmallFont);
-  //myOLED.print("Made by VeZhD", 0, 48);
-  //myOLED.print("Code from Alekssaff", 0, 56);
-  //myOLED.update();
-  delay(1500);
-  ssid_state_ts = millis();
-}
-
 void BrightnessChangeLoop() {
   Brightness_State = digitalRead(BRIGHTNESS_PIN);
   if (Brightness_State == LOW && Brightness_LastState == HIGH) {
     if (Brightness > 0 && Brightness < 255) {
       Brightness += 5;
     } else {
-      Brightness = 155;
+      Brightness = 55;
     }
 
-    FastLED.setBrightness(Brightness);
+    matrix.setBrightness(Brightness);
+    //FastLED.setBrightness(Brightness);
     EEPROM.write(5, Brightness);
     EEPROM.commit();
     Brightness_State_ts = millis();
@@ -226,15 +240,33 @@ void BrightnessChangeLoop() {
   Brightness_LastState = Brightness_State;
 }
 
+void PrintTicker(String text,uint16_t colors) {
+  for (int x = matrix.width(); x > -73; x--){
+    matrix.fillScreen(0);
+    matrix.setCursor(x, 0);                     // Отступ сверху
+    matrix.setTextColor(colors);
+    matrix.print(text);
+    matrix.show();                              // Функция показа текста
+    delay(111);
+    //if(--x < -100) {                            // Если показывается не весь текст, то увеличить число
+  //  x = matrix.width();
+  //  if (++pass >= 3) {pass = 0;}              // Количество цветов
+  
+  }
+}
+
 void setup() {
   pinMode(SSID_PIN, INPUT_PULLUP);
   pinMode(FONT_PIN, INPUT_PULLUP);       // пин кнопки переключения шрифта
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
 
-  FastLED.addLeds<WS2811, DATA_PIN, GRB>(leds, NUM_LEDS);
-  //FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
-  FastLED.setBrightness(Brightness);
-
+  //FastLED.addLeds<WS2811, DATA_PIN, GRB>(leds, NUM_LEDS);
+  //FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds, NUM_LEDS);
+  //FastLED.setBrightness(Brightness);
+  matrix.begin();
+  matrix.setTextWrap(false);
+  matrix.setBrightness(Brightness);
+  matrix.setTextColor(colors[0]);
   
   
 #if defined(ESP32)
@@ -258,18 +290,21 @@ void setup() {
 
   // event handler
   webSocket.onEvent(webSocketEvent);
-  //PrintCopyright();
 
   connectToHost();
   SW_Basic_OTA();
 
+  PrintTicker("Hello Gymkhanists", NumbersColor);
+
 }
 
 void loop() {
+  //PrintTicker("Hello Gymkhanists", NumbersColor);
   webSocket.loop();
 
   ArduinoOTA.handle();
-  FastLED.clear();
+  //FastLED.clear();
+  matrix.fillScreen(0);
   TimerLoop();
   //ssidChangeLoop();
   //FontChangeLoop();
@@ -286,7 +321,8 @@ void loop() {
   //} else {
   //  TimePrintXY(TopTime, 0, 49, "Top Time: ");
   //}
-  FastLED.show();
+  //FastLED.show();
   //FastLED.delay(10);
+  matrix.show();                              // Функция показа текста
   //delay(1);
 }
