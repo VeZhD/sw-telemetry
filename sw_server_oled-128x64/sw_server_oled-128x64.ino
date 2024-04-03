@@ -6,24 +6,22 @@ VCC -> 5V
 GND -> GND
 *********/
 
-//#define SW_BASIC_OTA_HOSTNAME // Hostname для ESP при OTA обновлении через Arduino IDE, по-умолчанию - "SW_server", без ковычек
-//#define SW_BASIC_OTA_PASSWORD  // Паролья при OTA обновлении через Arduino IDE, по-умолчанию - "SW_serverPASSWORD", без ковычек
-
-#define DEFAULTS
-
+#define SENSOR_NPN // при использовании сенсора с NPN укзать SENSOR_NPN, при использовании сенсора с PNP укзать SENSOR_PNP
 #define SENSOR_PIN 6     // пин подключения датчика луча
 
-// Import required libraries for ESP32/ESP32s2/etc.
-// /*
+
+#define button01    10
+#define button02    12
+#define button03    13
+#define HotPlug_pin 11
+
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <AsyncTCP.h>
-#include <ESPAsyncWebSrv.h>
+#include <ESPAsyncWebServer.h>
+#include <AsyncElegantOTA.h>
 #include <DNSServer.h>
-#include <ArduinoOTA.h>
-
 #include <esp_timer.h>
-// */
 
 /* API is quite simple :
 #include “esp_timer.h”
@@ -48,7 +46,7 @@ int64_t esp_timer_get_time (void)
 
 #include "SSID_server.h"
 #include "html.h"
-#include "server.h"
+//#include "server.h"
 //#include "128x64.h"
 
 #define SCREEN_WIDTH 128     // OLED display width, in pixels
@@ -59,6 +57,9 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 DNSServer dnsServer;
 const char *server_name = "*"; //"sw";  // Can be "*" to all DNS requests
+
+bool  HotPlug_State;
+bool  HotPlug_LastState = HIGH;
 
 bool ledState = 0;
 const int ledPin = 2;
@@ -115,25 +116,22 @@ void printtime(void) {
   display.print(mSeconds);
   display.print(miSeconds);
   display.println(milSeconds);
-  //display.fillRect(121, 0, 2, 15, SSD1306_WHITE); // Draw !
-  //display.fillRect(120, 18, 4, 3, SSD1306_WHITE); // Draw !
+
 
   display.setTextSize(1);  // Draw 1X-scale text
   display.println("#####################");
-  // display.println("---------------------");
+  //display.println(String(HotPlug_State) + "  " + String(HotPlug_LastState));
   display.println("IPv4: " + apIP);
-  display.println("Wifi: " + String(ssid));
-  display.println("Pass: " + String(password));
+  display.println("Wifi: " + String(ssid_name));
+  display.println("Pass: " + String(ssid_pass));
 
   if (startStopState == LOW) {
     display.setTextColor(SSD1306_WHITE);
     display.println("Sensor is working! ");
-    //    display.fillRect(0, 59, 128, 61, SSD1306_BLACK);
   } else {
 
     display.setTextColor(SSD1306_WHITE);
     display.println("Sensor error!!! ");
-    //    display.fillRect(0, 56, 128, 61, SSD1306_WHITE);
   }
 
   display.display();
@@ -196,10 +194,26 @@ void initWebSocket(void) {
   server.addHandler(&ws);
 }
 
-void setup() {
-  pinMode(SENSOR_PIN, INPUT);
+void HotPlug_display() {
+  HotPlug_State = digitalRead(HotPlug_pin);
+  if (HotPlug_State == LOW && HotPlug_LastState != HotPlug_State) {
+    delay(1500);
+    display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
+  }
 
-//  SW_Basic_OTA();
+  HotPlug_LastState = HotPlug_State;  
+}
+
+void setup() {
+#if defined(SENSOR_NPN)
+  pinMode(SENSOR_PIN, INPUT_PULLUP);
+#elif defined(SENSOR_PNP)
+  pinMode(SENSOR_PIN, INPUT);
+#else
+#error "The type of sensor used is not specified"
+#endif
+
+  pinMode(HotPlug_pin, INPUT_PULLUP);
 
 //  Serial.begin(115200);
 //  Serial.println();
@@ -211,11 +225,11 @@ void setup() {
       ;  // Don't proceed, loop forever
   }
   display.display();
-  delay(2000);  // Pause for 2 seconds
+  delay(1000); 
 
   // You can remove the password parameter if you want the AP to be open.(ssid, password,channel, hide=1, clients max= )
-  //WiFi.softAP(ssid, password, 13, 1, 5);
-  WiFi.softAP(ssid, password, 13);
+  //WiFi.softAP(ssid_name, ssid_pass, 13, 1, 5);
+  WiFi.softAP(ssid_name, ssid_pass, 13);
 
   IPAddress myIP = WiFi.softAPIP();
 
@@ -233,9 +247,8 @@ void setup() {
 
   printip();
 
-  server.begin();
-
-//  Serial.println("Server started");
+  // А нужна ли эта строчка?
+  //sserver.begin();
 
   initWebSocket();
 
@@ -244,15 +257,23 @@ void setup() {
     request->send_P(200, "text/html", index_html);
   });
 
+  AsyncElegantOTA.begin(&server,web_user,web_pass);    // Start AsyncElegantOTA
   // Start server
   server.begin();
 }
 
 void loop() {
-//  ArduinoOTA.handle();
   dnsServer.processNextRequest();
+  
+  HotPlug_display();
 
+#if defined(SENSOR_NPN)
+  startStopState = !digitalRead(SENSOR_PIN);
+#elif defined(SENSOR_PNP)
   startStopState = digitalRead(SENSOR_PIN);
+#else
+#error "The type of sensor used is not specified"
+#endif
 
   if (timerState == 0) {
     if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
@@ -276,12 +297,12 @@ void loop() {
   //  if (millis() % 60000 == 0){
   //    ws.cleanupClients();
   //  }
-  if (timerState == 1 && millis() - 1500 > lastWsUpTime) {
+  if (timerState == 1 && millis() - 750 > lastWsUpTime) {
     notifyClients();
   }
-  if (timerState == 0 && millis() - 2000 > lastWsUpTime) {
+  if (timerState == 0 && millis() - 1000 > lastWsUpTime) {
     notifyClients();
   }
   printtime();
-  delay(1);
+  //delay(1);
 }
