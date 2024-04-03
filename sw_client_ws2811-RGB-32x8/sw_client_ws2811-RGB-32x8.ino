@@ -5,11 +5,9 @@ SDA -> D2(GPIO4) For ESP8266(Wemos D1 mini) / 33 For ESP32s2(Wemos(Lolin) S2 min
 VCC -> 5V
 GND -> GND
 *********/
-#define DEFAULT_00
+
 #define SW_Basic_OTA_HOSTNAME "SWC_WS2812b"  // HostName для ESP, по умолчанию "SW_client", без ковычек
 //#define SW_Basic_OTA_PASSWORD "passwordSWC_WS2812b"  // пароль для OTA обновления, по умолчанию "passwordSW_client", без ковычек
-
-//#include <FastLED.h>
 
 #if defined(ESP32)
   #pragma message "ESP32 stuff happening!"
@@ -66,59 +64,13 @@ const uint16_t colors[] = {matrix.Color(255, 0, 0), matrix.Color(0, 255, 0), mat
 uint16_t DotColor = matrix.Color(255, 0, 0);
 uint16_t NumbersColor = matrix.Color(0, 255, 0);
 
-//uint32_t DotColor = CRGB::Black;
-//uint32_t NumbersColor = CRGB::Black;
-
-/*
-#define NUM_LEDS 256
-
-// Описание матрицы, возможно есть лишнее
-#define CONNECTION_ANGLE 1
-#define STRIP_DIRECTION 3
-#define MATRIX_TYPE 0
-#define COLOR_ORDER GRB
-#define WIDTH 32
-#define HEIGHT 8
-#define SEGMENTS 1
-
-
-
-//CRGB leds[NUM_LEDS];
-
-#if (CONNECTION_ANGLE == 1 && STRIP_DIRECTION == 3)
-#define _WIDTH HEIGHT
-#define THIS_X (HEIGHT - y - 1)
-#define THIS_Y x
-
-#else
-#define _WIDTH WIDTH
-#define THIS_X x
-#define THIS_Y y
-#pragma message "Wrong matrix parameters! Set to default"
-
-#endif
-
-// функция отрисовки точки по координатам X Y
-void drawPixelXY(int x, int y, uint32_t color) {
-//  leds[getPixelNumber(x, y)] = color;
-}
-
-// получить номер пикселя в ленте по координатам
-uint16_t getPixelNumber(int x, int y) {
-  if ((THIS_Y % 2 == 0) || MATRIX_TYPE) {  // если чётная строка
-    return (THIS_Y * _WIDTH + THIS_X);
-  } else {  // если нечётная строка
-    return (THIS_Y * _WIDTH + _WIDTH - THIS_X - 1);
-  }
-}
-*/
 void printWifiState() {
   if (Connected == true) {
-    //NumbersColor = CRGB::Green;
+    NumbersColor = matrix.Color(0, 255, 0);
     //myOLED.setFont(SmallFont);
     //myOLED.print("Wifi: ON ", 0, 57);
   } else {
-    //NumbersColor = CRGB::Blue;
+    NumbersColor = matrix.Color(0, 0, 255);
     //myOLED.setFont(SmallFont);
     //myOLED.print("Wifi: OFF", 0, 57);
   }
@@ -126,11 +78,11 @@ void printWifiState() {
 
 void printWsState() {
   if (ConnectedWS == true) {
-    //DotColor = CRGB::Red;
+    DotColor = matrix.Color(255, 0, 0);
     //myOLED.setFont(SmallFont);
     //myOLED.print("/ WS: ON ", 64, 57);
   } else {
-    //DotColor = CRGB::Black;
+    DotColor = matrix.Color(0, 0, 255);
     //myOLED.setFont(SmallFont);
     //myOLED.print("/ WS: OFF", 64, 57);
   }
@@ -215,7 +167,6 @@ void FontChangeLoop() {
     } else {
       Font_ID = 0;
     }
-    //myOLED.clrScr();
     EEPROM.write(3, Font_ID);
     EEPROM.commit();
   }
@@ -232,7 +183,6 @@ void BrightnessChangeLoop() {
     }
 
     matrix.setBrightness(Brightness);
-    //FastLED.setBrightness(Brightness);
     EEPROM.write(5, Brightness);
     EEPROM.commit();
     Brightness_State_ts = millis();
@@ -248,10 +198,6 @@ void PrintTicker(String text,uint16_t colors) {
     matrix.print(text);
     matrix.show();                              // Функция показа текста
     delay(111);
-    //if(--x < -100) {                            // Если показывается не весь текст, то увеличить число
-  //  x = matrix.width();
-  //  if (++pass >= 3) {pass = 0;}              // Количество цветов
-  
   }
 }
 
@@ -260,9 +206,6 @@ void setup() {
   pinMode(FONT_PIN, INPUT_PULLUP);       // пин кнопки переключения шрифта
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
 
-  //FastLED.addLeds<WS2811, DATA_PIN, GRB>(leds, NUM_LEDS);
-  //FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds, NUM_LEDS);
-  //FastLED.setBrightness(Brightness);
   matrix.begin();
   matrix.setTextWrap(false);
   matrix.setBrightness(Brightness);
@@ -299,11 +242,9 @@ void setup() {
 }
 
 void loop() {
-  //PrintTicker("Hello Gymkhanists", NumbersColor);
   webSocket.loop();
 
   ArduinoOTA.handle();
-  //FastLED.clear();
   matrix.fillScreen(0);
   TimerLoop();
   //ssidChangeLoop();
@@ -321,8 +262,6 @@ void loop() {
   //} else {
   //  TimePrintXY(TopTime, 0, 49, "Top Time: ");
   //}
-  //FastLED.show();
-  //FastLED.delay(10);
   matrix.show();                              // Функция показа текста
   //delay(1);
 }
