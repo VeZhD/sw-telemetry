@@ -6,10 +6,7 @@ VCC -> 5V
 GND -> GND
 *********/
 
-//#define SW_BASIC_OTA_HOSTNAME // Hostname для ESP при OTA обновлении через Arduino IDE, по-умолчанию - "SW_server", без ковычек
-//#define SW_BASIC_OTA_PASSWORD  // Паролья при OTA обновлении через Arduino IDE, по-умолчанию - "SW_serverPASSWORD", без ковычек
-
-#define DEFAULTS
+#define SENSOR_NPN // при использовании сенсора с NPN укзать SENSOR_NPN, при использовании сенсора с PNP укзать SENSOR_PNP
 
 #define SENSOR_PIN 6     // пин подключения датчика луча
 
@@ -20,7 +17,7 @@ GND -> GND
 #include <AsyncTCP.h>
 #include <ESPAsyncWebSrv.h>
 #include <DNSServer.h>
-#include <ArduinoOTA.h>
+//#include <ArduinoOTA.h>
 
 #include <esp_timer.h>
 // */
@@ -115,25 +112,22 @@ void printtime(void) {
   display.print(mSeconds);
   display.print(miSeconds);
   display.println(milSeconds);
-  //display.fillRect(121, 0, 2, 15, SSD1306_WHITE); // Draw !
-  //display.fillRect(120, 18, 4, 3, SSD1306_WHITE); // Draw !
+
 
   display.setTextSize(1);  // Draw 1X-scale text
   display.println("#####################");
   // display.println("---------------------");
   display.println("IPv4: " + apIP);
-  display.println("Wifi: " + String(ssid));
-  display.println("Pass: " + String(password));
+  display.println("Wifi: " + String(ssid_name));
+  display.println("Pass: " + String(ssid_pass));
 
   if (startStopState == LOW) {
     display.setTextColor(SSD1306_WHITE);
     display.println("Sensor is working! ");
-    //    display.fillRect(0, 59, 128, 61, SSD1306_BLACK);
   } else {
 
     display.setTextColor(SSD1306_WHITE);
     display.println("Sensor error!!! ");
-    //    display.fillRect(0, 56, 128, 61, SSD1306_WHITE);
   }
 
   display.display();
@@ -197,9 +191,13 @@ void initWebSocket(void) {
 }
 
 void setup() {
+#if defined(SENSOR_NPN)
   pinMode(SENSOR_PIN, INPUT_PULLUP);
-
-//  SW_Basic_OTA();
+#elif defined(SENSOR_PNP)
+  pinMode(SENSOR_PIN, INPUT);
+#else
+#error "The type of sensor used is not specified"
+#endif
 
 //  Serial.begin(115200);
 //  Serial.println();
@@ -211,11 +209,11 @@ void setup() {
       ;  // Don't proceed, loop forever
   }
   display.display();
-  delay(2000);  // Pause for 2 seconds
+  delay(1000); 
 
   // You can remove the password parameter if you want the AP to be open.(ssid, password,channel, hide=1, clients max= )
-  //WiFi.softAP(ssid, password, 13, 1, 5);
-  WiFi.softAP(ssid, password, 13);
+  //WiFi.softAP(ssid_name, ssid_pass, 13, 1, 5);
+  WiFi.softAP(ssid_name, ssid_pass, 13);
 
   IPAddress myIP = WiFi.softAPIP();
 
@@ -245,15 +243,21 @@ void setup() {
     request->send_P(200, "text/html", index_html);
   });
 
+  //AsyncElegantOTA.begin(&server,web_user,web_pass);    // Start AsyncElegantOTA
   // Start server
   server.begin();
 }
 
 void loop() {
-//  ArduinoOTA.handle();
   dnsServer.processNextRequest();
 
+#if defined(SENSOR_NPN)
   startStopState = !digitalRead(SENSOR_PIN);
+#elif defined(SENSOR_PNP)
+  startStopState = digitalRead(SENSOR_PIN);
+#else
+#error "The type of sensor used is not specified"
+#endif
 
   if (timerState == 0) {
     if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
