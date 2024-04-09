@@ -5,7 +5,7 @@ SDA -> D2(GPIO4) For ESP8266(Wemos D1 mini) / 33 For ESP32s2(Wemos(Lolin) S2 min
 VCC -> 5V
 GND -> GND
 *********/
-#define DEFAULT_00
+
 #define SW_Basic_OTA_HOSTNAME "SWC_OLED"  // HostName для ESP, по умолчанию "SW_client", без ковычек
 //#define SW_Basic_OTA_PASSWORD "passwordSWC_OLED"  // пароль для OTA обновления, по умолчанию "passwordSW_client", без ковычек
 

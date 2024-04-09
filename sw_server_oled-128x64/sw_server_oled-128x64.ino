@@ -6,8 +6,8 @@ VCC -> 5V
 GND -> GND
 *********/
 
-#define SENSOR_NPN // при использовании сенсора с NPN укзать SENSOR_NPN, при использовании сенсора с PNP укзать SENSOR_PNP
-#define SENSOR_NO // при использовании сенсора с NO(Normal Open, нормально открытый) укзать SENSOR_NO, при использовании сенсора NC(Normal Closed, нормально закрытый) укзать SENSOR_NC
+//#define SENSOR_NPN // при использовании сенсора с NPN укзать SENSOR_NPN, при использовании сенсора с PNP укзать SENSOR_PNP
+//#define SENSOR_NO // при использовании сенсора с NO(Normal Open, нормально открытый) укзать SENSOR_NO, при использовании сенсора NC(Normal Closed, нормально закрытый) укзать SENSOR_NC
 
 #define SENSOR_PIN 6     // пин подключения датчика луча
 
@@ -135,7 +135,7 @@ void printtime(void) {
   //display.println(String(HotPlug_State) + "  " + String(HotPlug_LastState));
   display.println("IPv4: " + apIP);
   display.println("Wifi: " + String(ssid_name));
-  display.println("Pass: " + String(ssid_pass));
+  display.println("Pass:" + String(ssid_pass));
 
   if (startStopState == LOW) {
     display.setTextColor(SSD1306_WHITE);

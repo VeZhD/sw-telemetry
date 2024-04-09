@@ -7,10 +7,9 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 #define USE_GFX_ROOT
 #define NO_FAST_FUNCTIONS
 */
-#define VEZHD
 
 #define DISPLAY_LASTTIME 2 // кол-во отображаемых значений последнего времени, обычно 1
-#define SW_Basic_OTA_HOSTNAME SWC_RGB12864  // HostName для ESP
+//#define SW_Basic_OTA_HOSTNAME SWC_RGB12864  // HostName для ESP
 //#define SW_Basic_OTA_PASSWORD passwordSWC_RGB12864  // пароль для OTA обновления, по умолчанию "passwordSW_client", без ковычек
 
 #define SSID_PIN 34        // пин кнопки переключения wifi сети
@@ -222,16 +221,16 @@ void TimePrintXY(uint32_t time, byte x, byte y, String name) {
   dma_display->setTextSize(1);
   dma_display->print(name);
   dma_display->setTextColor(dma_display->color444(255, 0, 0));
-  dma_display->drawPixel(x + name.length() * 6, y + 2, dma_display->color444(0, 0, 255));  // двоеточие
-  dma_display->drawPixel(x + name.length() * 6, y + 4, dma_display->color444(0, 0, 255));  // двоеточие
+  dma_display->drawPixel(x + name.length() * 6, y + 2, dma_display->color444(0, 255, 0));  // двоеточие
+  dma_display->drawPixel(x + name.length() * 6, y + 4, dma_display->color444(0, 255, 0));  // двоеточие
   dma_display->setCursor(x + name.length() * 6 + 2, y);
   dma_display->print(minutes);
-  dma_display->drawPixel(x + name.length() * 6 + 8, y + 2, dma_display->color444(0, 0, 255));  // двоеточие
-  dma_display->drawPixel(x + name.length() * 6 + 8, y + 4, dma_display->color444(0, 0, 255));  // двоеточие
+  dma_display->drawPixel(x + name.length() * 6 + 8, y + 2, dma_display->color444(0, 255, 0));  // двоеточие
+  dma_display->drawPixel(x + name.length() * 6 + 8, y + 4, dma_display->color444(0, 255, 0));  // двоеточие
   dma_display->setCursor(x + name.length() * 6 + 10, y);
   dma_display->print(tSeconds);
   dma_display->print(seconds);
-  dma_display->drawPixel(x + name.length() * 6 + 22, y + 6, dma_display->color444(0, 0, 255));  // точка перед милисикундами
+  dma_display->drawPixel(x + name.length() * 6 + 22, y + 6, dma_display->color444(0, 255, 0));  // точка перед милисикундами
   dma_display->setCursor(x + name.length() * 6 + 24, y);
   dma_display->print(mSeconds);
   dma_display->print(miSeconds);
