@@ -7,7 +7,6 @@ Add to ESP32-HUB75-MatrixPanel-I2S-DMA.h :
 #define USE_GFX_ROOT
 #define NO_FAST_FUNCTIONS
 */
-#define DEFAULT
 
 #define DISPLAY_LASTTIME 1 // кол-во отображаемых значений последнего времени, обычно 1
 #define SW_Basic_OTA_HOSTNAME SWC_RGB6432  // HostName для ESP
