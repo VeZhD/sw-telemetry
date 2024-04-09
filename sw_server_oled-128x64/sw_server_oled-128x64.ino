@@ -7,6 +7,8 @@ GND -> GND
 *********/
 
 #define SENSOR_NPN // при использовании сенсора с NPN укзать SENSOR_NPN, при использовании сенсора с PNP укзать SENSOR_PNP
+#define SENSOR_NO // при использовании сенсора с NO(Normal Open, нормально открытый) укзать SENSOR_NO, при использовании сенсора NC(Normal Closed, нормально закрытый) укзать SENSOR_NC
+
 #define SENSOR_PIN 6     // пин подключения датчика луча
 
 
@@ -15,13 +17,31 @@ GND -> GND
 #define button03    13
 #define HotPlug_pin 11
 
-#include <WiFi.h>
+
+#if defined(ESP32)
+  #pragma message "ESP32 stuff happening!"
+
+  #include <WiFi.h>
+  #include <AsyncTCP.h>
+
+#elif defined(ESP8266)
+  // с ESP8266 не было полноценных тестов, возможно что-то отвалится, возможно нужно переназначить пины
+  #pragma message "ESP8266 stuff happening!"
+
+  #include <ESP8266WiFi.h>
+  #include <ESPAsyncTCP.h>
+
+#else
+#error "This ain't a ESP8266 or ESP32, dumbo!"
+#endif
+
+//#include <WiFi.h>
 #include <WiFiClient.h>
-#include <AsyncTCP.h>
+//#include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
 #include <DNSServer.h>
-#include <esp_timer.h>
+//#include <esp_timer.h>
 
 /* API is quite simple :
 #include “esp_timer.h”
@@ -29,14 +49,6 @@ GND -> GND
 then call the function
 
 int64_t esp_timer_get_time (void)
-
-// Import required libraries for ESP8266
- /*
-#include <ESP8266WiFi.h>
-#include <WiFiClient.h>
-#include <ESPAsyncTCP.h>
-#include <ESPAsyncWebSrv.h>
-#include <DNSServer.h>
 // */
 
 #include <SPI.h>
@@ -267,9 +279,9 @@ void loop() {
   
   HotPlug_display();
 
-#if defined(SENSOR_NPN)
+#if ( defined(SENSOR_NPN) and defined(SENSOR_NO) ) or ( defined(SENSOR_PNP) and defined(SENSOR_NC) )
   startStopState = !digitalRead(SENSOR_PIN);
-#elif defined(SENSOR_PNP)
+#elif ( defined(SENSOR_PNP) and defined(SENSOR_NO) ) or ( defined(SENSOR_NPN) and defined(SENSOR_NC) )
   startStopState = digitalRead(SENSOR_PIN);
 #else
 #error "The type of sensor used is not specified"
