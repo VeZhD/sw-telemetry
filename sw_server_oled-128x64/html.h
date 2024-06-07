@@ -32,7 +32,7 @@ const char index_html[] PROGMEM = { R"rawliteral(
     color: white;
     padding-top:10px;
     padding-bottom:20px;
-    font-size: 17vw;
+    font-size: 25vw;
   }
   .indicator {
     width: 9vw;
@@ -43,6 +43,17 @@ const char index_html[] PROGMEM = { R"rawliteral(
   }
   .indicator.state-green {
     background: lime;
+  }
+  .fullscreen {
+    font-size: 3vw;
+    color: white;
+    position: absolute;
+    padding: 1vw;
+    border: 1px solid white;
+    bottom: 10px;
+    right: 10px;
+    cursor: pointer;
+    opacity: 0.3;
   }
   .ss{font-family: sans-serif;}
 </style>
@@ -57,6 +68,9 @@ const char index_html[] PROGMEM = { R"rawliteral(
     </div>
     <div class="indicators">
       <div class="indicator" :class="sc"></div>
+    </div>
+    <div class="fullscreen" @click="setFs">
+      FullScreen
     </div>
     <div class="messages" v-text="msg">
     </div>
@@ -74,7 +88,7 @@ const char index_html[] PROGMEM = { R"rawliteral(
     },
     computed: {
       tm(){
-        return String(Math.floor(this.ct/60000)).padStart(2,'0');
+        return String(Math.floor(this.ct/60000)).padStart(1,'0');
       },
       ts(){
         return String(Math.floor(this.ct/1000) % 60).padStart(2, '0');
@@ -87,6 +101,33 @@ const char index_html[] PROGMEM = { R"rawliteral(
       }
     },
     methods: {
+      initScreenLock(){
+        try{
+          let wakeLock = null;
+          wakeLock = navigator.wakeLock.request('screen');
+          wakeLock.then( () => {
+            console.log('Wake Lock is active!');             
+          }).catch( (err) => {
+            console.log(err);
+          })           
+        } catch (err){
+          console.log(err);
+        }
+      },
+      setFs(){
+        let elem = document.getElementById('sw');
+        if (!document.fullscreenElement) {
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen();
+        } else if(elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen();
+        } else if(elem.msRequestFullscreen){
+         elem.msRequestFullscreen();
+        }}
+        else {
+           document.exitFullscreen();
+        }
+      },
       initWs(){
         var gateway = `ws://${window.location.hostname}/ws`;
         this.ws = new WebSocket(gateway);
@@ -124,6 +165,7 @@ const char index_html[] PROGMEM = { R"rawliteral(
     mounted(){
       var websocket;
       this.initWs();
+      this.initScreenLock();
     }
   })
 
