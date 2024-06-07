@@ -86,26 +86,30 @@ long elapsedTime;
 long currentTime = 0;
 long lastWsUpTime = 0;
 long lastChange;
+/*
 int minutes = 0;
 int tSeconds = 0;
 int seconds = 0;
 int mSeconds = 0;
 int miSeconds = 0;
 int milSeconds = 0;
+*/
+uint32_t PreviousPrintTime = millis();
+uint PrintDelay = 473;
 
-int StopDelay = 2500; // задержка срабатывания на луч в миллисекундах
+int StopDelay = 1500; // задержка срабатывания на луч в миллисекундах
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
-void printtime(void) {
-  minutes = (int)(currentTime / 60000) % 10;
-  tSeconds = (int)(currentTime % 60000 / 10000);
-  seconds = (int)(currentTime % 60000 % 10000 / 1000);
-  mSeconds = (int)(currentTime % 60000 % 1000 / 100);
-  miSeconds = (int)(currentTime % 60000 % 100 / 10);
-  milSeconds = (int)(currentTime % 60000 % 10);
+void printtime(long time) {
+  int minutes = (int)(time / 60000) % 10;
+  int tSeconds = (int)(time % 60000 / 10000);
+  int seconds = (int)(time % 60000 % 10000 / 1000);
+  int mSeconds = (int)(time % 60000 % 1000 / 100);
+  int miSeconds = (int)(time % 60000 % 100 / 10);
+  int milSeconds = (int)(time % 60000 % 10);
 
   display.clearDisplay();
 
@@ -306,6 +310,25 @@ void loop() {
     }
     startStopLastState = startStopState;
   }
+
+// Срабатывание таймера по каждому пересечению луча, как китайский лаптаймер
+/*
+  currentTime = millis() - startTime; 
+  if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
+    startTime = millis();
+    timerState = 1;
+    currentTime = millis() - startTime;
+    lastChange = millis();
+    notifyClients();
+  }
+  startStopLastState = startStopState;
+  /*
+  if (millis() - PreviousPrintTime >= PrintDelay) {
+    PreviousPrintTime = millis();
+    printtime();
+  }
+*/
+
   //  if (millis() % 60000 == 0){
   //    ws.cleanupClients();
   //  }
@@ -315,6 +338,7 @@ void loop() {
   if (timerState == 0 && millis() - 1000 > lastWsUpTime) {
     notifyClients();
   }
-  printtime();
+
+  printtime(currentTime);
   //delay(1);
 }
