@@ -12,11 +12,12 @@ GND -> GND
 #define SENSOR_PIN 6     // пин подключения датчика луча
 
 
-#define button01    10
+#define button01    13
 #define button02    12
-#define button03    13
+#define button03    10
 #define HotPlug_pin 11
 
+#define EEPROM_SIZE   64    // размер EEPROM
 
 #if defined(ESP32)
   #pragma message "ESP32 stuff happening!"
@@ -41,6 +42,7 @@ GND -> GND
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
 #include <DNSServer.h>
+#include <EEPROM.h>
 //#include <esp_timer.h>
 
 /* API is quite simple :
@@ -58,8 +60,8 @@ int64_t esp_timer_get_time (void)
 
 #include "SSID_server.h"
 #include "html.h"
-//#include "server.h"
-//#include "128x64.h"
+#include "128x64.h"
+
 
 #define SCREEN_WIDTH 128     // OLED display width, in pixels
 #define SCREEN_HEIGHT 64     // OLED display height, in pixels
@@ -70,38 +72,31 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 DNSServer dnsServer;
 const char *server_name = "*"; //"sw";  // Can be "*" to all DNS requests
 
-bool  HotPlug_State;
-bool  HotPlug_LastState = HIGH;
+//bool ledState = 0;
+//const int ledPin = 15;
 
-bool ledState = 0;
-const int ledPin = 2;
-
-int startStopState;
+bool startStopState;
 String startStopStateName;
+IPAddress myIP;
 String apIP = "";
-int startStopLastState;
-int timerState = 0;
-long startTime;
-long elapsedTime;
-long currentTime = 0;
-long lastWsUpTime = 0;
-long lastChange;
-/*
-int minutes = 0;
-int tSeconds = 0;
-int seconds = 0;
-int mSeconds = 0;
-int miSeconds = 0;
-int milSeconds = 0;
-*/
-uint32_t PreviousPrintTime = millis();
-uint PrintDelay = 473;
+bool startStopLastState;
+uint8_t timerState = 0;
+uint32_t startTime;
+//uint32_t elapsedTime;
+uint32_t currentTime = 0;
+uint32_t lastWsUpTime = 0;
+uint32_t lastChange;
 
-int StopDelay = 1500; // задержка срабатывания на луч в миллисекундах
+uint32_t PreviousPrintTime = millis();
+uint PrintDelay = 10000;
+
+uint StopDelay = 1650; // задержка срабатывания на луч в миллисекундах
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
+
+#include "server.h"
 
 void printtime(long time) {
   int minutes = (int)(time / 60000) % 10;
@@ -113,44 +108,64 @@ void printtime(long time) {
 
   display.clearDisplay();
 
-  display.setCursor(0, 0);  // Start at top-left corner
+  if (Font_ID == Font_Count) {
 
-  display.setTextSize(3);  // Draw 3X-scale text
-  display.setTextColor(SSD1306_WHITE);
-  display.print(minutes);
-  display.setTextSize(1);  // Draw 1X-scale text
-  display.print(F(" "));
-  display.fillRect(18, 6, 3, 3, SSD1306_WHITE);   // Draw :
-  display.fillRect(18, 12, 3, 3, SSD1306_WHITE);  // Draw :
-  display.setTextSize(3);                         // Draw 3X-scale text
-  display.print(tSeconds);
-  display.print(seconds);
-  display.setTextSize(1);  // Draw 1X-scale text
-  display.print(F(" "));
-  display.fillRect(60, 18, 3, 3, SSD1306_WHITE);  // Draw .
-  display.setTextSize(3);                         // Draw 3X-scale text
-  display.print(mSeconds);
-  display.print(miSeconds);
-  display.println(milSeconds);
+    display.setCursor(0, 0);  // Start at top-left corner
 
-
-  display.setTextSize(1);  // Draw 1X-scale text
-  display.println("#####################");
-  //display.println(String(HotPlug_State) + "  " + String(HotPlug_LastState));
-  display.println("IPv4: " + apIP);
-  display.println("Wifi: " + String(ssid_name));
-  display.println("Pass:" + String(ssid_pass));
-
-  if (startStopState == LOW) {
+    display.setTextSize(3);  // Draw 3X-scale text
     display.setTextColor(SSD1306_WHITE);
-    display.println("Sensor is working! ");
+    display.print(minutes);
+    display.setTextSize(1);  // Draw 1X-scale text
+    display.print(F(" "));
+    display.fillRect(18, 6, 3, 3, SSD1306_WHITE);   // Draw :
+    display.fillRect(18, 12, 3, 3, SSD1306_WHITE);  // Draw :
+    display.setTextSize(3);                         // Draw 3X-scale text
+    display.print(tSeconds);
+    display.print(seconds);
+    display.setTextSize(1);  // Draw 1X-scale text
+    display.print(F(" "));
+    display.fillRect(60, 18, 3, 3, SSD1306_WHITE);  // Draw .
+    display.setTextSize(3);                         // Draw 3X-scale text
+    display.print(mSeconds);
+    display.print(miSeconds);
+    display.println(milSeconds);
+    display.setTextSize(1);
+    display.println("Wifi: " + String(ssid_name[wifi_id]));
+    if ( wifi_id == 0) {
+      display.println("Pass:" + String(ssid_pass[0]));
+    } else {
+      display.print("IPv4: " + apIP);
+    }
+
   } else {
-
-    display.setTextColor(SSD1306_WHITE);
-    display.println("Sensor error!!! ");
+    int dX = 1;
+    // Minutes
+    drawDigit(dX + 0, minutes);
+    // Seconds
+    drawDigit(dX + (1 * SizeX) + 5, tSeconds);
+    drawDigit(dX + (2 * SizeX) + 6, seconds);
+    // milliseconds
+    drawDigit(dX + (3 * SizeX) + 11, mSeconds);
+    drawDigit(dX + (4 * SizeX) + 12, miSeconds);
+    drawDigit(dX + (5 * SizeX) + 13, milSeconds);
+    // Двоеточие
+    display.fillRect(dX + (1 * SizeX) + 1, int(SizeY / 3), 3, 3, SSD1306_WHITE);
+    display.fillRect(dX + (1 * SizeX) + 1, int(SizeY - SizeY / 3), 3, 3, SSD1306_WHITE);
+    // Точка
+    display.fillRect(dX + (3 * SizeX) + 7, SizeY - 3, 3, 3, SSD1306_WHITE);
   }
 
-  display.display();
+  display.setCursor(20, 40);
+  display.print("mode: " + modeString);
+
+  display.setCursor(0, 56);
+  if (startStopState == LOW) {
+    display.setTextColor(SSD1306_WHITE);
+    display.print("Sensor is working! ");
+  } else {
+    display.setTextColor(SSD1306_WHITE);
+    display.print("Sensor error!!! ");
+  }
 }
 
 void printip(void) {
@@ -159,7 +174,6 @@ void printip(void) {
   display.setTextSize(1);    // Draw 2X-scale text
   display.setTextColor(SSD1306_WHITE);
   display.println("Made by VeZhD");
-  //display.println("VeZhD");
   display.println("Code from Alekssaff");
   display.display();
   delay(1500);
@@ -180,7 +194,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
     data[len] = 0;
     if (strcmp((char *)data, "toggle") == 0) {
-      ledState = !ledState;
+      //ledState = !ledState;
       notifyClients();
     }
   }
@@ -189,11 +203,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
              void *arg, uint8_t *data, size_t len) {
   switch (type) {
-    case WS_EVT_CONNECT:
-//      Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+    case WS_EVT_CONNECT:  //      Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
       break;
-    case WS_EVT_DISCONNECT:
-//      Serial.printf("WebSocket client #%u disconnected\n", client->id());
+    case WS_EVT_DISCONNECT: //      Serial.printf("WebSocket client #%u disconnected\n", client->id());
       break;
     case WS_EVT_DATA:
       handleWebSocketMessage(arg, data, len);
@@ -210,17 +222,14 @@ void initWebSocket(void) {
   server.addHandler(&ws);
 }
 
-void HotPlug_display() {
-  HotPlug_State = digitalRead(HotPlug_pin);
-  if (HotPlug_State == LOW && HotPlug_LastState != HotPlug_State) {
-    delay(1500);
-    display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
-  }
-
-  HotPlug_LastState = HotPlug_State;  
+boolean find_i2c(uint8_t address) { // функция проверки устройства по указанному адресу I2C
+  Wire.beginTransmission(address);
+  return (Wire.endTransmission () == 0); //возвращает true если ошибок нет (устройство подключено и отвечает)
 }
 
+
 void setup() {
+
 #if defined(SENSOR_NPN)
   pinMode(SENSOR_PIN, INPUT_PULLUP);
 #elif defined(SENSOR_PNP)
@@ -231,6 +240,28 @@ void setup() {
 
   pinMode(HotPlug_pin, INPUT_PULLUP);
 
+  pinMode(button01, INPUT_PULLUP);
+  pinMode(button02, INPUT_PULLUP);
+  pinMode(button03, INPUT_PULLUP);
+
+
+#if defined(ESP32)
+  // For ESP32/ESP32s2/ESP32s3
+  if (!EEPROM.begin(EEPROM_SIZE)) {
+    delay(1000000);
+  } 
+#elif defined(ESP8266)
+  // For ESP8266
+  EEPROM.begin(EEPROM_SIZE);
+#endif
+
+  if ((EEPROM.read(3) >= 0) && (EEPROM.read(3) <= Font_Count)) {
+    Font_ID = EEPROM.read(3);
+  }
+  if ((EEPROM.read(0) >= 0) && (EEPROM.read(0) < (sizeof(ssid_name) / sizeof(char *)))) {
+    wifi_id = EEPROM.read(0);
+  }
+
 //  Serial.begin(115200);
 //  Serial.println();
 //  Serial.println("Configuring access point...");
@@ -240,31 +271,42 @@ void setup() {
     for (;;)
       ;  // Don't proceed, loop forever
   }
+  display.clearDisplay();
   display.display();
-  delay(1000); 
+  delay(500); 
 
+  /*
+  // если подключен дисплей - инициализируем его
+  if( display_enable = find_i2c(SCREEN_ADDRESS) ) {
+    display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);    
+    display.clearDisplay();
+    display.display();
+    delay(300); 
+    }
+*/
   // You can remove the password parameter if you want the AP to be open.(ssid, password,channel, hide=1, clients max= )
   //WiFi.softAP(ssid_name, ssid_pass, 13, 1, 5);
-  WiFi.softAP(ssid_name, ssid_pass, 13);
-
-  IPAddress myIP = WiFi.softAPIP();
-
-  const byte DNS_PORT = 53;
-  dnsServer.start(DNS_PORT, server_name, myIP);
-
+  if ( wifi_id == 0) {
+    WiFi.softAP(ssid_name[0], ssid_pass[0], 13);
+    myIP = WiFi.softAPIP();
+  } else {
+    connectToHost();
+    myIP = WiFi.localIP();
+  }
   //################
-  apIP += String(myIP[0]) + ".";
+  apIP = String(myIP[0]) + ".";
   apIP += String(myIP[1]) + ".";
   apIP += String(myIP[2]) + ".";
   apIP += String(myIP[3]);
   //###################
+  
+  const byte DNS_PORT = 53;
+  dnsServer.start(DNS_PORT, server_name, myIP);
+
 //  Serial.print("AP IP address: ");
 //  Serial.println(myIP);
 
   printip();
-
-  // А нужна ли эта строчка?
-  //sserver.begin();
 
   initWebSocket();
 
@@ -282,6 +324,23 @@ void loop() {
   dnsServer.processNextRequest();
   
   HotPlug_display();
+/*
+if( display_enable ) {
+  //display.clear();
+  //display.setFont(ArialMT_Plain_16);
+  //display.drawString(0, 0, "Test:");
+  //display.display();
+  display_enable = find_i2c(SCREEN_ADDRESS); // проверяем связь с дисплеем, чтобы отработать его отключение
+  }
+else  {
+   // если дисплей отключить, а потом снова включить - он нуждается в командах инициализации
+  if( display_enable = find_i2c(SCREEN_ADDRESS) ) {
+    display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);    
+    display.clearDisplay();
+    display.display();
+    }
+  } 
+*/
 
 #if ( defined(SENSOR_NPN) and defined(SENSOR_NO) ) or ( defined(SENSOR_PNP) and defined(SENSOR_NC) )
   startStopState = !digitalRead(SENSOR_PIN);
@@ -291,43 +350,66 @@ void loop() {
 #error "The type of sensor used is not specified"
 #endif
 
-  if (timerState == 0) {
-    if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
-      startTime = millis();
-      timerState = 1;
-      currentTime = millis() - startTime;
-      lastChange = millis();
-      notifyClients();
-    }
-    startStopLastState = startStopState;
-  } else {
-    currentTime = millis() - startTime;
-    if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
-      timerState = 0;
-      elapsedTime = currentTime;
-      lastChange = millis();
-      notifyClients();
-    }
-    startStopLastState = startStopState;
-  }
+switch (mode)
+{
+  case 0: 
+    if (timerState == 0) {
+     if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
+       
+        for (int i = LastTimeCount - 1; i > 0; i--) {
+          LastTime[i] = LastTime[i - 1];
+        }
+        //LastTime[0] = LastCurrentTime;
+        LastTime[0] = currentTime;
 
-// Срабатывание таймера по каждому пересечению луча, как китайский лаптаймер
-/*
-  currentTime = millis() - startTime; 
-  if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
-    startTime = millis();
-    timerState = 1;
-    currentTime = millis() - startTime;
-    lastChange = millis();
-    notifyClients();
-  }
-  startStopLastState = startStopState;
-  /*
-  if (millis() - PreviousPrintTime >= PrintDelay) {
-    PreviousPrintTime = millis();
-    printtime();
-  }
-*/
+       startTime = millis();
+       timerState = 1;
+       currentTime = millis() - startTime;
+       lastChange = millis();
+       notifyClients();
+     }
+     startStopLastState = startStopState;
+    } else {
+     currentTime = millis() - startTime;
+     if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
+       timerState = 0;
+       //elapsedTime = currentTime;
+       lastChange = millis();
+       notifyClients();
+     }
+     startStopLastState = startStopState;
+    }
+    break;
+
+
+  case 1:  // Срабатывание таймера по каждому пересечению луча, как китайский лаптаймер
+    if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
+
+      for (int i = LastTimeCount - 1; i > 0; i--) {
+        LastTime[i] = LastTime[i - 1];
+      }
+      LastTime[0] = currentTime;
+
+      currentTime = millis() - startTime;
+      startTime = millis();
+      timerState = 0;
+      notifyClients();
+      lastChange = millis();
+    }
+    startStopLastState = startStopState;
+  
+    if (millis() - startTime >= PrintDelay) {
+      currentTime = millis() - startTime;
+      timerState = 1;
+    }
+    break;
+}
+
+//  if (millis() - PreviousPrintTime >= PrintDelay) {
+//    PreviousPrintTime = millis();
+//    printtime();
+//  }
+
 
   //  if (millis() % 60000 == 0){
   //    ws.cleanupClients();
@@ -338,7 +420,38 @@ void loop() {
   if (timerState == 0 && millis() - 1000 > lastWsUpTime) {
     notifyClients();
   }
+  
+
+  ChangeMode();
+  ssidChangeLoop();
+
+  LastTimeIDChangeLoop();
+  FontChangeLoop();
 
   printtime(currentTime);
+  if (LastTimeID <10) {
+    TimePrintXY(LastTime[LastTimeID], 0, 48, "LastTime 0" + String(LastTimeID) + ": ");
+    }
+  else {
+    TimePrintXY(LastTime[LastTimeID], 0, 48, "LastTime " + String(LastTimeID) + ": ");
+  }
+/*
+  if (ssid_state_ts + 1000 > millis()) {
+    //printSSID();
+    myIP = WiFi.localIP();
+    //################
+    apIP = String(myIP[0]) + ".";
+    apIP += String(myIP[1]) + ".";
+    apIP += String(myIP[2]) + ".";
+    apIP += String(myIP[3]);
+  }// else {
+  //  TimePrintXY(TopTime, 0, 49, "Top Time: ");
+  //}
+*/
+  TestPressButton01();
+  TestPressButton02();
+  TestPressButton03();
+  
+  display.display();
   //delay(1);
 }

@@ -6,7 +6,7 @@ VCC -> 5V
 GND -> GND
 *********/
 
-#define SW_Basic_OTA_HOSTNAME "SWC_OLED"  // HostName для ESP, по умолчанию "SW_client", без ковычек
+//#define SW_Basic_OTA_HOSTNAME "SWC_OLED"  // HostName для ESP, по умолчанию "SW_client", без ковычек
 //#define SW_Basic_OTA_PASSWORD "passwordSWC_OLED"  // пароль для OTA обновления, по умолчанию "passwordSW_client", без ковычек
 
 #if defined(ESP32)
@@ -213,8 +213,13 @@ void loop() {
   printWsState();
   PrintTime();
 
-  TimePrintXY(LastTime[LastTimeID], 0, 40, "LastTime " + String(LastTimeID) + ": ");
-  
+  if (LastTimeID <10) {
+    TimePrintXY(LastTime[LastTimeID], 0, 40, "LastTime 0" + String(LastTimeID) + ": ");
+    }
+  else {
+    TimePrintXY(LastTime[LastTimeID], 0, 40, "LastTime " + String(LastTimeID) + ": ");
+  }
+
   if (ssid_state_ts + 5000 > millis()) {
     printSSID();
   } else {
