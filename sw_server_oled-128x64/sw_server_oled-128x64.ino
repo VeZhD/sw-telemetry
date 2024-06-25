@@ -134,6 +134,13 @@ void printtime(long time) {
     if ( wifi_id == 0) {
       display.println("Pass:" + String(ssid_pass[0]));
     } else {
+      myIP = WiFi.localIP();
+      //################
+      apIP = String(myIP[0]) + ".";
+      apIP += String(myIP[1]) + ".";
+      apIP += String(myIP[2]) + ".";
+      apIP += String(myIP[3]);
+      //###################
       display.print("IPv4: " + apIP);
     }
 
@@ -266,14 +273,10 @@ void setup() {
 //  Serial.println();
 //  Serial.println("Configuring access point...");
 
-  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
-//    Serial.println(F("SSD1306 allocation failed"));
-    for (;;)
-      ;  // Don't proceed, loop forever
-  }
+  display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
   display.clearDisplay();
   display.display();
-  delay(500); 
+  delay(150); 
 
   /*
   // если подключен дисплей - инициализируем его
@@ -287,21 +290,12 @@ void setup() {
   // You can remove the password parameter if you want the AP to be open.(ssid, password,channel, hide=1, clients max= )
   //WiFi.softAP(ssid_name, ssid_pass, 13, 1, 5);
   if ( wifi_id == 0) {
-    WiFi.softAP(ssid_name[0], ssid_pass[0], 13);
-    myIP = WiFi.softAPIP();
+    StartAPMode();
   } else {
     connectToHost();
-    myIP = WiFi.localIP();
   }
-  //################
-  apIP = String(myIP[0]) + ".";
-  apIP += String(myIP[1]) + ".";
-  apIP += String(myIP[2]) + ".";
-  apIP += String(myIP[3]);
-  //###################
-  
-  const byte DNS_PORT = 53;
-  dnsServer.start(DNS_PORT, server_name, myIP);
+
+  dnsServer.start(53, server_name, IPAddress(192, 168, 4, 1));
 
 //  Serial.print("AP IP address: ");
 //  Serial.println(myIP);
@@ -435,19 +429,7 @@ switch (mode)
   else {
     TimePrintXY(LastTime[LastTimeID], 0, 48, "LastTime " + String(LastTimeID) + ": ");
   }
-/*
-  if (ssid_state_ts + 1000 > millis()) {
-    //printSSID();
-    myIP = WiFi.localIP();
-    //################
-    apIP = String(myIP[0]) + ".";
-    apIP += String(myIP[1]) + ".";
-    apIP += String(myIP[2]) + ".";
-    apIP += String(myIP[3]);
-  }// else {
-  //  TimePrintXY(TopTime, 0, 49, "Top Time: ");
-  //}
-*/
+
   TestPressButton01();
   TestPressButton02();
   TestPressButton03();

@@ -104,23 +104,10 @@ void ssidChangeLoop() {
       wifi_id++;
       delay(250);
       connectToHost();
-      delay(1250);
-      myIP = WiFi.localIP();
-      //################
-      apIP = String(myIP[0]) + ".";
-      apIP += String(myIP[1]) + ".";
-      apIP += String(myIP[2]) + ".";
-      apIP += String(myIP[3]);
-      //###################
-
     } else {
       wifi_id = 0;
       delay(150);
       StartAPMode();
-      //WiFi.disconnect();
-      //WiFi.mode(WIFI_AP);
-      //WiFi.softAP(ssid_name[0], ssid_pass[0], 13);
-
     }
     EEPROM.write(0, wifi_id);
     EEPROM.commit();
