@@ -42,13 +42,14 @@ const char index_html[] PROGMEM = { R"rawliteral(
     height: 9vw;
     display: inline-block;
     border-radius: 500px;
-    background: yellow;
+    background: lime;
     user-select: none;
   }
-  .indicator.state-green {
-    background: lime;
+  .indicator.state-yellow {
+    background: yellow;
   }
   .fullscreen {
+    font-family: fantasy;
     font-size: 3vw;
     color: white;
     position: absolute;
@@ -101,7 +102,7 @@ const char index_html[] PROGMEM = { R"rawliteral(
         return String(Math.floor(this.ct) % 1000).padStart(3, '0');
       },
       sc(){
-        return parseInt(this.gs) ? 'state-green' : 'state-red';
+        return parseInt(this.gs) ? 'state-yellow' : 'state-red';
       }
     },
     methods: {
@@ -157,7 +158,7 @@ const char index_html[] PROGMEM = { R"rawliteral(
         }
       },
     },
-    watch: {
+   watch: {
       cs(nv, ov){
         if (nv && !ov){
           this.timer = setInterval(() => {

@@ -1,4 +1,3 @@
-#include "WiFiType.h"
 #ifndef DISPLAY_LASTTIME
 #define DISPLAY_LASTTIME 1
 #endif
