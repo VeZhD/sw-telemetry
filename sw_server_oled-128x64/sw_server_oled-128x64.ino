@@ -1,7 +1,7 @@
 /*********
 Connect I2C Oled display 
-SCL -> WeMos D1 mini - D1(GPIO5) / Lolin s2 mini - 35
-SDA -> WeMos D1 mini - D2(GPIO4) / Lolin s2 mini - 33
+SCL -> WeMos D1 mini - D1(GPIO5) / Lolin s2 mini - 35 / Lolin s3 mini - 36
+SDA -> WeMos D1 mini - D2(GPIO4) / Lolin s2 mini - 33 / Lolin s3 mini - 35
 VCC -> 5V
 GND -> GND
 *********/
@@ -10,7 +10,6 @@ GND -> GND
 //#define SENSOR_NO // при использовании сенсора с NO(Normal Open, нормально открытый) укзать SENSOR_NO, при использовании сенсора NC(Normal Closed, нормально закрытый) укзать SENSOR_NC
 
 #define SENSOR_PIN 6     // пин подключения датчика луча
-
 
 #define button01    13
 #define button02    12
@@ -26,19 +25,29 @@ GND -> GND
   #include <AsyncTCP.h>
 
 #elif defined(ESP8266)
-  // с ESP8266 не было полноценных тестов, возможно что-то отвалится, возможно нужно переназначить пины
+//С ESP8266 не было полноценных тестов, возможно что-то отвалится, обязательно проверить используемые пины
   #pragma message "ESP8266 stuff happening!"
 
   #include <ESP8266WiFi.h>
   #include <ESPAsyncTCP.h>
+  
+  #undef button01
+  #undef button02
+  #undef button03
+  #undef SENSOR_PIN
+  #undef HotPlug_pin
 
+  #define SENSOR_PIN 2
+
+  #define button01    12
+  #define button02    13
+  #define button03    14
+  #define HotPlug_pin 14
 #else
-#error "This ain't a ESP8266 or ESP32, dumbo!"
+  #error "This ain't a ESP8266 or ESP32, dumbo!"
 #endif
 
-//#include <WiFi.h>
 #include <WiFiClient.h>
-//#include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
 #include <DNSServer.h>
@@ -57,9 +66,11 @@ int64_t esp_timer_get_time (void)
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+//#include <SPIFFS.h>
 
 #include "SSID_server.h"
-#include "html.h"
+#include "html_ws.h"
+//#include "html_get.h"
 #include "128x64.h"
 
 
@@ -72,25 +83,19 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 DNSServer dnsServer;
 const char *server_name = "*"; //"sw";  // Can be "*" to all DNS requests
 
-//bool ledState = 0;
-//const int ledPin = 15;
-
 bool startStopState;
 String startStopStateName;
 IPAddress myIP;
 String apIP = "";
 bool startStopLastState;
 uint8_t timerState = 0;
-uint32_t startTime;
-//uint32_t elapsedTime;
+uint32_t startTime = 0;
 uint32_t currentTime = 0;
-uint32_t lastWsUpTime = 0;
 uint32_t lastChange;
+String laptime = "";
 
-uint32_t PreviousPrintTime = millis();
-uint PrintDelay = 10000;
-
-uint StopDelay = 1650; // задержка срабатывания на луч в миллисекундах
+uint PrintDelay = 10000;  // задержка отображения результата в режиме кругового таймера
+uint StopDelay = 1650;    // задержка срабатывания на луч в миллисекундах
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
@@ -173,6 +178,7 @@ void printtime(long time) {
     display.setTextColor(SSD1306_WHITE);
     display.print("Sensor error!!! ");
   }
+  
 }
 
 void printip(void) {
@@ -187,13 +193,7 @@ void printip(void) {
 }
 
 void notifyClients(void) {
-  lastWsUpTime = millis();
-  if (startStopState == LOW) {
-    startStopStateName = '1';
-  } else {
-    startStopStateName = '0';
-  }
-  ws.textAll(startStopStateName + String(timerState) + String(currentTime));
+  ws.textAll(String(!startStopState) + String(timerState) + String(currentTime));
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
@@ -201,7 +201,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
     data[len] = 0;
     if (strcmp((char *)data, "toggle") == 0) {
-      //ledState = !ledState;
       notifyClients();
     }
   }
@@ -229,11 +228,12 @@ void initWebSocket(void) {
   server.addHandler(&ws);
 }
 
+/*
 boolean find_i2c(uint8_t address) { // функция проверки устройства по указанному адресу I2C
   Wire.beginTransmission(address);
   return (Wire.endTransmission () == 0); //возвращает true если ошибок нет (устройство подключено и отвечает)
 }
-
+*/
 
 void setup() {
 
@@ -250,7 +250,6 @@ void setup() {
   pinMode(button01, INPUT_PULLUP);
   pinMode(button02, INPUT_PULLUP);
   pinMode(button03, INPUT_PULLUP);
-
 
 #if defined(ESP32)
   // For ESP32/ESP32s2/ESP32s3
@@ -297,9 +296,6 @@ void setup() {
 
   dnsServer.start(53, server_name, IPAddress(192, 168, 4, 1));
 
-//  Serial.print("AP IP address: ");
-//  Serial.println(myIP);
-
   printip();
 
   initWebSocket();
@@ -307,6 +303,10 @@ void setup() {
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send_P(200, "text/html", index_html);
+  });
+
+  server.on("/laptime", HTTP_GET, [](AsyncWebServerRequest* request) {
+    request->send(200, "text/plain", laptime);
   });
 
   AsyncElegantOTA.begin(&server,web_user,web_pass);    // Start AsyncElegantOTA
@@ -346,17 +346,16 @@ else  {
 
 switch (mode)
 {
-  case 0: 
+  case 0: // Start-Stop timer
     if (timerState == 0) {
-     if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
-       
+      if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
+        startTime = millis();
+
         for (int i = LastTimeCount - 1; i > 0; i--) {
           LastTime[i] = LastTime[i - 1];
         }
-        //LastTime[0] = LastCurrentTime;
         LastTime[0] = currentTime;
 
-       startTime = millis();
        timerState = 1;
        currentTime = millis() - startTime;
        lastChange = millis();
@@ -364,10 +363,9 @@ switch (mode)
      }
      startStopLastState = startStopState;
     } else {
-     currentTime = millis() - startTime;
+       currentTime = millis() - startTime;
      if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
        timerState = 0;
-       //elapsedTime = currentTime;
        lastChange = millis();
        notifyClients();
      }
@@ -375,17 +373,16 @@ switch (mode)
     }
     break;
 
-
   case 1:  // Срабатывание таймера по каждому пересечению луча, как китайский лаптаймер
     if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
+      currentTime = millis() - startTime;
+      startTime = millis();
 
       for (int i = LastTimeCount - 1; i > 0; i--) {
         LastTime[i] = LastTime[i - 1];
       }
       LastTime[0] = currentTime;
 
-      currentTime = millis() - startTime;
-      startTime = millis();
       timerState = 0;
       notifyClients();
       lastChange = millis();
@@ -395,26 +392,16 @@ switch (mode)
     if (millis() - startTime >= PrintDelay) {
       currentTime = millis() - startTime;
       timerState = 1;
+      notifyClients();
     }
     break;
 }
 
-//  if (millis() - PreviousPrintTime >= PrintDelay) {
-//    PreviousPrintTime = millis();
-//    printtime();
-//  }
+  laptime = String(!startStopState) + String(timerState) + String(currentTime);
 
-
-  //  if (millis() % 60000 == 0){
-  //    ws.cleanupClients();
-  //  }
-  if (timerState == 1 && millis() - 750 > lastWsUpTime) {
-    notifyClients();
-  }
-  if (timerState == 0 && millis() - 1000 > lastWsUpTime) {
-    notifyClients();
-  }
-  
+  //if (millis() - 1555 > lastWsUpTime) {
+  //  notifyClients();
+  //}  
 
   ChangeMode();
   ssidChangeLoop();
