@@ -18,9 +18,7 @@
 
 Так же скорее всего подойдут следующие датчики - [Link1](https://aliexpress.ru/item/1005004251139454.html?sku_id=12000028524452661), [Link2](https://aliexpress.ru/item/1005005325512127.html?sku_id=12000032633027413)
 
-ESP32s2 - [Lolin S2 mini](https://aliexpress.ru/item/1005003145192016.html?sku_id=12000024338777694)
-
-ESP32s3 - [Lolin S3 mini](https://aliexpress.ru/item/1005006646247867.html)
+ESP32s2 - [Lolin S2 mini](https://aliexpress.ru/item/1005003145192016.html?sku_id=12000024338777694) или ESP32s3 - [Lolin S3 mini](https://aliexpress.ru/item/1005006646247867.html)
 
 
 [DC-DC]([https://aliexpress.ru/item/1005002525645136.html](https://aliexpress.ru/item/1005001578810552.html?sku_id=12000016666979656)) или [этот](https://aliexpress.ru/item/10000000656280.html?sku_id=20000000002551824), а можно и  [этот](https://aliexpress.ru/item/1005003249843639.html?sku_id=12000024854854504)
