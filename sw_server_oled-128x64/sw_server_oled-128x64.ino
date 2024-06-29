@@ -23,6 +23,7 @@ GND -> GND
 
   #include <WiFi.h>
   #include <AsyncTCP.h>
+  #include <Update.h>
 
 #elif defined(ESP8266)
 //С ESP8266 не было полноценных тестов, возможно что-то отвалится, обязательно проверить используемые пины
@@ -52,27 +53,12 @@ GND -> GND
 #include <AsyncElegantOTA.h>
 #include <DNSServer.h>
 #include <EEPROM.h>
-//#include <esp_timer.h>
-
-/* API is quite simple :
-#include “esp_timer.h”
-
-then call the function
-
-int64_t esp_timer_get_time (void)
-// */
 
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-//#include <SPIFFS.h>
-
-#include "SSID_server.h"
-#include "html_ws.h"
-//#include "html_get.h"
-#include "128x64.h"
-
+#include <SPIFFS.h>
 
 #define SCREEN_WIDTH 128     // OLED display width, in pixels
 #define SCREEN_HEIGHT 64     // OLED display height, in pixels
@@ -83,17 +69,6 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 DNSServer dnsServer;
 const char *server_name = "*"; //"sw";  // Can be "*" to all DNS requests
 
-bool startStopState;
-String startStopStateName;
-IPAddress myIP;
-String apIP = "";
-bool startStopLastState;
-uint8_t timerState = 0;
-uint32_t startTime = 0;
-uint32_t currentTime = 0;
-uint32_t lastChange;
-String laptime = "";
-
 uint PrintDelay = 10000;  // задержка отображения результата в режиме кругового таймера
 uint StopDelay = 1650;    // задержка срабатывания на луч в миллисекундах
 
@@ -101,7 +76,12 @@ uint StopDelay = 1650;    // задержка срабатывания на лу
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
+#include "SSID_server.h"
+//#include "html_ws.h"
+#include "html_get.h"
+#include "128x64.h"
 #include "server.h"
+#include "ota_update.h"
 
 void printtime(long time) {
   int minutes = (int)(time / 60000) % 10;
@@ -309,6 +289,7 @@ void setup() {
     request->send(200, "text/plain", laptime);
   });
 
+  //OTAWeb_update_begin();
   AsyncElegantOTA.begin(&server,web_user,web_pass);    // Start AsyncElegantOTA
   // Start server
   server.begin();
@@ -422,5 +403,4 @@ switch (mode)
   TestPressButton03();
   
   display.display();
-  //delay(1);
 }

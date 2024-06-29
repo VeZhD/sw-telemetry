@@ -5,6 +5,17 @@
 #define FONT_PIN      button01
 #define LAST_TIME_PIN button02
 
+bool startStopState;
+String startStopStateName;
+IPAddress myIP;
+String apIP = "";
+bool startStopLastState;
+uint8_t timerState = 0;
+uint32_t startTime = 0;
+uint32_t currentTime = 0;
+uint32_t lastChange;
+String laptime = "";
+
 bool  HotPlug_State;
 bool  HotPlug_LastState = LOW;
 bool  display_enable;
@@ -49,7 +60,6 @@ uint32_t LastTimeID_State_ts = millis();
 
 uint32_t TopTime = 599999;
 uint count = 0;
-
 
 
 void CalcTopTime() {
