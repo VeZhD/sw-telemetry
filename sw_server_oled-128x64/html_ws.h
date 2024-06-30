@@ -42,11 +42,11 @@ const char index_html[] PROGMEM = { R"rawliteral(
     height: 9vw;
     display: inline-block;
     border-radius: 500px;
-    background: lime;
+    background: yellow;
     user-select: none;
   }
-  .indicator.state-yellow {
-    background: yellow;
+  .indicator.state-green {
+    background: lime;
   }
   .fullscreen {
     font-family: fantasy;
@@ -102,7 +102,7 @@ const char index_html[] PROGMEM = { R"rawliteral(
         return String(Math.floor(this.ct) % 1000).padStart(3, '0');
       },
       sc(){
-        return parseInt(this.gs) ? 'state-yellow' : 'state-red';
+        return parseInt(this.gs) ? 'state-green' : 'state-red';
       }
     },
     methods: {

@@ -114,6 +114,7 @@ void printtime(long time) {
     display.print(mSeconds);
     display.print(miSeconds);
     display.println(milSeconds);
+    display.setTextWrap(false);
     display.setTextSize(1);
     display.println("Wifi: " + String(ssid_name[wifi_id]));
     if ( wifi_id == 0) {
