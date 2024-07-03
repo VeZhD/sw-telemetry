@@ -77,8 +77,11 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 #include "SSID_server.h"
-//#include "html_ws.h"
+#include "html_ws.h"
 #include "html_get.h"
+#include "favicon.h"
+#include "script.js.gz.h"
+#include "NoSleep.min.js.gz.h"
 #include "128x64.h"
 #include "server.h"
 #include "ota_update.h"
@@ -267,8 +270,7 @@ void setup() {
     delay(300); 
     }
 */
-  // You can remove the password parameter if you want the AP to be open.(ssid, password,channel, hide=1, clients max= )
-  //WiFi.softAP(ssid_name, ssid_pass, 13, 1, 5);
+
   if ( wifi_id == 0) {
     StartAPMode();
   } else {
@@ -284,10 +286,47 @@ void setup() {
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send_P(200, "text/html", index_html);
+    // < or >
+    // AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", html_get_h_gz, html_get_h_gz_len);
+    // response->addHeader("Content-Encoding", "gzip");
+    // request->send(response);
+  });
+
+  server.on("/ws", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/html", index_html_ws);
+    // < or >
+    // AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", html_ws_h_gz, html_ws_h_gz_len);
+    // response->addHeader("Content-Encoding", "gzip");
+    // request->send(response);
   });
 
   server.on("/laptime", HTTP_GET, [](AsyncWebServerRequest* request) {
     request->send(200, "text/plain", laptime);
+  });
+
+  server.on("/favicon.ico",  HTTP_GET, [](AsyncWebServerRequest *request){    
+    // AsyncWebServerResponse *response = request->beginResponse_P(200, "image/x-icon", favicon_ico, favicon_ico_len);
+    // AsyncWebServerResponse *response = request->beginResponse_P(200, "image/x-icon", favicon_ico_gz, favicon_ico_gz_len);
+    // response->addHeader("Content-Encoding", "gzip");
+    // request->send(response);
+    // < or >
+    request->send_P(200, "image/png", favicon, favicon_png_len);
+    });
+
+  server.on("/NoSleep.min.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    // request->send_P(200, "text/javascript", NoSleep_min_js);
+    // < or >
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript", NoSleep_min_js_gz, NoSleep_min_js_gz_len);
+    response->addHeader("Content-Encoding", "gzip");
+    request->send(response);
+  });
+  
+  server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    // request->send_P(200, "text/javascript", script_js_gz);
+    // < or >
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript", script_js_gz, script_js_gz_len);
+    response->addHeader("Content-Encoding", "gzip");
+    request->send(response);
   });
 
   //OTAWeb_update_begin();

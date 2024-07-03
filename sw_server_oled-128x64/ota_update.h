@@ -3,8 +3,8 @@
 
 const char header_html[] PROGMEM = "<!DOCTYPE html><html><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'/><meta name='viewport' content='width=device-width, initial-scale=1, minimum-scale=1.0, shrink-to-fit=no'><title>MG StopWatcher - Update!</title></head><body>";
 const char footer_html[] PROGMEM = "</body></html>";
-const char update_html[] PROGMEM = "<h1>Only .bin file</h1><form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update' required><input type='submit' value='Run Update'></form>";
-const String FW_VERSION = "0.0.1Beta";
+const char update_html[] PROGMEM = "<h1>Only .bin file</h1><form method='POST' action='/update' enctype='multipart/form-data'><input type='file' accept='.bin' name='update' required><input type='submit' value='Run Update'></form>";
+const String FW_VERSION = "*.*.1";
 
 
 void OTAWeb_update_begin(){
@@ -23,8 +23,7 @@ void OTAWeb_update_begin(){
 
   // Simple Firmware Update Form
   server.on("/update", HTTP_POST, [](AsyncWebServerRequest *request){
-    //shouldReboot = !Update.hasError();
-    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", Update.hasError()?"FAIL!!! Double-check steps and file \"*.bin\" and try again":"OK");
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", Update.hasError()?"FAIL!!! Double-check steps and try again":"OK");
     response->addHeader("Connection", "close");
     request->send(response);
   },[](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
@@ -48,7 +47,7 @@ void OTAWeb_update_begin(){
  
       if (!Update.end(true)){
         Update.printError(Serial);
-        AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "FAIL!!! Double-check steps and file \"*.bin\" and try again");
+        AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "FAIL!!! Double-check steps and try again");
       } else {
         AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "Please wait while the device reboots");
         response->addHeader("Refresh", "20");  
@@ -62,14 +61,6 @@ void OTAWeb_update_begin(){
 
     }
   });
-
-
-  //server.on("/favicon.ico",  HTTP_GET, [](AsyncWebServerRequest *request){
-  //   //request->send(200, "image/x-icon", favicon_ico);
-    //request->send(200, "image/x-icon", "favicon");
-    //response->addHeader("Content-Encoding", "gzip");
-    //request->send(response);
-    //});
 
 
 //#ifdef ESP32

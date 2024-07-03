@@ -73,7 +73,7 @@ void CalcTopTime() {
 void ResetTime() {
   startTime = 0;
   currentTime = 0;
-  startStopState = 0;
+  startStopState = LOW;
   timerState = LOW;
   //TimerLastState = LOW;
   TopTime = 599999;
@@ -98,6 +98,8 @@ void StartAPMode() {
   WiFi.mode(WIFI_OFF);
   delay(100);
   WiFi.mode(WIFI_AP);
+  // You can remove the password parameter if you want the AP to be open.(ssid, password,channel, hide=1, clients max= )
+  //WiFi.softAP(ssid_name[0], ssid_pass[0], 13, 1, 5);
   WiFi.softAP(ssid_name[0], ssid_pass[0], 13);
   //WiFi.softAPConfig(apIP, apIPgate, IPAddress(255, 255, 255, 0));//для кастомного ip, работало почему-то не всегда 
 }
@@ -108,7 +110,7 @@ void ssidChangeLoop() {
   button02_State = digitalRead(button02);
   button03_State = digitalRead(button03);
   if (button02_State == LOW && button02_LastState != button02_State && button03_State == LOW) {
-    ResetTime();
+   // ResetTime();
     if (wifi_id < (sizeof(ssid_name) / sizeof(char *) - 1) && wifi_id >= 0) {
       wifi_id++;
       delay(250);
