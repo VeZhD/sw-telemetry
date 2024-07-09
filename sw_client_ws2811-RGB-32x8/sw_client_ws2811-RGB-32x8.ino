@@ -12,10 +12,10 @@ GND -> GND
 #if defined(ESP32)
   #pragma message "ESP32 stuff happening!"
 
-  #define SSID_PIN        17  // пин кнопки переключения wifi сети
-  #define FONT_PIN        21  // пин кнопки переключения шрифта
-  #define LAST_TIME_PIN   34  // пин кнопки переключения предыдущего времени(1-10)
-  #define BRIGHTNESS_PIN  36  // пин кнопки яркости
+  #define SSID_PIN        10  // пин кнопки переключения wifi сети
+  #define FONT_PIN        11  // пин кнопки переключения шрифта
+  #define LAST_TIME_PIN   13  // пин кнопки переключения предыдущего времени(1-10)
+  #define BRIGHTNESS_PIN  12  // пин кнопки яркости
 
   #define DATA_PIN        16  // пин подключния матрицы
 
@@ -53,16 +53,24 @@ GND -> GND
 byte Brightness = 5;
 bool Brightness_State = HIGH;
 bool Brightness_LastState = HIGH;
-uint32_t Brightness_State_ts = 0;
+uint32_t Brightness_State_ts = millis();
 
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(32, 8, DATA_PIN,
-  NEO_MATRIX_BOTTOM + NEO_MATRIX_RIGHT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
+  NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
   NEO_GRB + NEO_KHZ800);
 
 const uint16_t colors[] = {matrix.Color(255, 0, 0), matrix.Color(0, 255, 0), matrix.Color(0, 0, 255)};
 
 uint16_t DotColor = matrix.Color(255, 0, 0);
 uint16_t NumbersColor = matrix.Color(0, 255, 0);
+
+const uint16_t blue = matrix.Color(0, 0, 255);
+const uint16_t red = matrix.Color(255, 0, 0);
+const uint16_t green = matrix.Color(0, 255, 0);
+
+
+String privet = "Hi MotoGymkhanist!"; 
+
 
 void printWifiState() {
   if (Connected == true) {
@@ -179,7 +187,7 @@ void BrightnessChangeLoop() {
     if (Brightness > 0 && Brightness < 255) {
       Brightness += 5;
     } else {
-      Brightness = 55;
+      Brightness = 35;
     }
 
     matrix.setBrightness(Brightness);
@@ -190,14 +198,16 @@ void BrightnessChangeLoop() {
   Brightness_LastState = Brightness_State;
 }
 
-void PrintTicker(String text,uint16_t colors) {
-  for (int x = matrix.width(); x > -73; x--){
+void PrintTicker(String text,uint16_t colors, int l) {
+  int dx = -5;
+//  for (int x = matrix.width(); x > dx * l; x--){
+  for (int x = matrix.width(); x > dx * l; x--){
     matrix.fillScreen(0);
     matrix.setCursor(x, 0);                     // Отступ сверху
     matrix.setTextColor(colors);
     matrix.print(text);
     matrix.show();                              // Функция показа текста
-    delay(111);
+    delay(75);
   }
 }
 
@@ -205,6 +215,7 @@ void setup() {
   pinMode(SSID_PIN, INPUT_PULLUP);
   pinMode(FONT_PIN, INPUT_PULLUP);       // пин кнопки переключения шрифта
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
+  pinMode(BRIGHTNESS_PIN, INPUT_PULLUP);
 
   matrix.begin();
   matrix.setTextWrap(false);
@@ -237,7 +248,7 @@ void setup() {
   connectToHost();
   SW_Basic_OTA();
 
-  PrintTicker("Hello Gymkhanists", NumbersColor);
+  PrintTicker(privet, NumbersColor, privet.length());
 
 }
 
@@ -247,14 +258,25 @@ void loop() {
   ArduinoOTA.handle();
   matrix.fillScreen(0);
   TimerLoop();
-  //ssidChangeLoop();
+  ssidChangeLoop();
   //FontChangeLoop();
   //LastTimeIDChangeLoop();
-  //BrightnessChangeLoop();
+  BrightnessChangeLoop();
   printWifiState();
   printWsState();
-  PrintTime();
-
+  // PrintTime();
+  
+  if (ssid_state_ts + 15500 > millis() ) {
+    // PrintSSID();
+    PrintTicker("Wifi: " + String(ssid[wifi_id]), blue, 6 + String(ssid[wifi_id]).length());
+  }
+  else if ( Brightness_State_ts  + 7500 > millis() ) {
+    matrix.setCursor(0, 0);                     // Отступ сверху
+    matrix.print("Br" + String(Brightness));
+  } 
+  else {
+    PrintTime();
+  }
   //TimePrintXY(LastTime[LastTimeID], 0, 40, "LastTime " + String(LastTimeID) + ": ");
   
   //if (ssid_state_ts + 5000 > millis()) {
