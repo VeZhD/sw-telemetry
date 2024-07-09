@@ -102,6 +102,12 @@ void StartAPMode() {
   //WiFi.softAP(ssid_name[0], ssid_pass[0], 13, 1, 5);
   WiFi.softAP(ssid_name[0], ssid_pass[0], 13);
   //WiFi.softAPConfig(apIP, apIPgate, IPAddress(255, 255, 255, 0));//для кастомного ip, работало почему-то не всегда 
+  //WiFi.softAPConfig(local_IP, gateway, netmask)
+
+  //Это немного магия, но в моем случае это работает так
+  //WiFi.softAP(ssid, password);
+  //delay(2000); // ОЧЕНЬ ВАЖНО
+  //WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
 }
 
 void ssidChangeLoop() {
