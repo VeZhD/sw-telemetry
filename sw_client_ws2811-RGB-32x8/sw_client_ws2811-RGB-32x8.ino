@@ -14,7 +14,8 @@ GND -> GND
 
   #define SSID_PIN        10  // пин кнопки переключения wifi сети
   #define FONT_PIN        11  // пин кнопки переключения шрифта
-  #define LAST_TIME_PIN   13  // пин кнопки переключения предыдущего времени(1-10)
+  #define LAST_TIME_PIN   14  // пин кнопки переключения предыдущего времени(1-10)
+  #define BRIGHTNESS_less_PIN   13  // пин кнопки переключения предыдущего времени(1-10)
   #define BRIGHTNESS_PIN  12  // пин кнопки яркости
 
   #define DATA_PIN        16  // пин подключния матрицы
@@ -55,6 +56,12 @@ bool Brightness_State = HIGH;
 bool Brightness_LastState = HIGH;
 uint32_t Brightness_State_ts = millis();
 
+bool Brightness_less_State = HIGH;
+bool Brightness_less_LastState = HIGH;
+uint32_t Brightness_less_State_ts = millis();
+
+uint32_t PrintTicker_ts = millis();
+
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(32, 8, DATA_PIN,
   NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
   NEO_GRB + NEO_KHZ800);
@@ -68,17 +75,19 @@ const uint16_t blue = matrix.Color(0, 0, 255);
 const uint16_t red = matrix.Color(255, 0, 0);
 const uint16_t green = matrix.Color(0, 255, 0);
 
+int XX = 0;
 
-String privet = "Hi MotoGymkhanist!"; 
+// String privet = "Hi, MotoGymkhanist!!!"; 
+String privet = "Hi, Cone-Man! MotoGymkhana the best!!!";
 
 
 void printWifiState() {
   if (Connected == true) {
-    NumbersColor = matrix.Color(0, 255, 0);
+    NumbersColor = matrix.Color(0, 255, 0); // Green
     //myOLED.setFont(SmallFont);
     //myOLED.print("Wifi: ON ", 0, 57);
   } else {
-    NumbersColor = matrix.Color(0, 0, 255);
+    NumbersColor = matrix.Color(0, 0, 255); // Blue
     //myOLED.setFont(SmallFont);
     //myOLED.print("Wifi: OFF", 0, 57);
   }
@@ -86,21 +95,14 @@ void printWifiState() {
 
 void printWsState() {
   if (ConnectedWS == true) {
-    DotColor = matrix.Color(255, 0, 0);
+    DotColor = matrix.Color(255, 0, 0); // Red
     //myOLED.setFont(SmallFont);
     //myOLED.print("/ WS: ON ", 64, 57);
   } else {
-    DotColor = matrix.Color(0, 0, 255);
+    DotColor = matrix.Color(0, 0, 255); // Blue
     //myOLED.setFont(SmallFont);
     //myOLED.print("/ WS: OFF", 64, 57);
   }
-}
-
-void printSSID() {
-  //myOLED.setFont(SmallFont);
-  //myOLED.print("                      ", 0, 49);
-  //myOLED.print("Wifi: " + String(ssid[wifi_id]) + "     ", 0, 49);
-  //myOLED.update();
 }
 
 void drawDigit(int dX, int digit, uint16_t color) {
@@ -115,42 +117,48 @@ void drawDigit(int dX, int digit, uint16_t color) {
 
 void PrintTime() {
 
-  int dX = 0;
-  // minutes
-  drawDigit(dX, CurrentMinutes, NumbersColor);
-  // dots
-  dX = 4;
-  matrix.drawPixel(1 + dX, 3, DotColor);
-  matrix.drawPixel(1 + dX, 5, DotColor);
+  if ( Font_ID == 0 ){
+    int dX = 0;
+    // minutes
+    drawDigit(dX, CurrentMinutes, NumbersColor);
+    // dots
+    dX = 4;
+    matrix.drawPixel(1 + dX, 3, DotColor);
+    matrix.drawPixel(1 + dX, 5, DotColor);
 
-  // tSeconds
-  dX = 7;
-  drawDigit(dX, CurrenttSeconds, NumbersColor);
-  // seconds
-  dX = 12;
-  drawDigit(dX, Currentseconds, NumbersColor);
-  // dot
-  dX = 16;
-  matrix.drawPixel(1 + dX, 7, DotColor);
-  //drawDot(dX, NumbersColor);
-  dX = 18;
-  drawDigit(dX, CurrentmSeconds, NumbersColor);
-  dX = 23;
-  drawDigit(dX, CurrentmiSeconds, NumbersColor);
-  dX = 28;
-  drawDigit(dX, CurrentmilSeconds, NumbersColor);
-/*
-  matrix.setCursor(0, 0);                     // Отступ сверху
-  matrix.print(CurrentMinutes);
-  matrix.setCursor(4, 0);                     // Отступ сверху
-  matrix.print(":");
-  matrix.setCursor(8, 0);                     // Отступ сверху
-  matrix.print(String(CurrenttSeconds) + String(Currentseconds));
-  matrix.setCursor(17, 0);                     // Отступ сверху
-  matrix.print(".");
-  matrix.setCursor(21, 0);                     // Отступ сверху
-  matrix.print(String(CurrentmSeconds) + String(CurrentmiSeconds));
-*/
+    // tSeconds
+    dX = 7;
+    drawDigit(dX, CurrenttSeconds, NumbersColor);
+    // seconds
+    dX = 12;
+    drawDigit(dX, Currentseconds, NumbersColor);
+    // dot
+    dX = 16;
+    matrix.drawPixel(1 + dX, 7, DotColor);
+    //drawDot(dX, NumbersColor);
+    dX = 18;
+    drawDigit(dX, CurrentmSeconds, NumbersColor);
+    dX = 23;
+    drawDigit(dX, CurrentmiSeconds, NumbersColor);
+    dX = 28;
+    drawDigit(dX, CurrentmilSeconds, NumbersColor);
+  } else {
+    matrix.setCursor(0, 0);
+    matrix.setTextColor(NumbersColor);
+    matrix.print(CurrentMinutes);
+    matrix.setCursor(4, 0);
+    matrix.setTextColor(DotColor);
+    matrix.print(":");
+    matrix.setCursor(8, 0);
+    matrix.setTextColor(NumbersColor);
+    matrix.print(String(CurrenttSeconds) + String(Currentseconds));
+    matrix.setCursor(17, 0);
+    matrix.setTextColor(DotColor);
+    matrix.print(".");
+    matrix.setCursor(21, 0);
+    matrix.setTextColor(NumbersColor);
+    matrix.print(String(CurrentmSeconds) + String(CurrentmiSeconds));
+  }
 }
 
 void TimePrintXY(uint32_t time, byte x, byte y, String name) {
@@ -183,11 +191,23 @@ void FontChangeLoop() {
 
 void BrightnessChangeLoop() {
   Brightness_State = digitalRead(BRIGHTNESS_PIN);
+  Brightness_less_State = digitalRead(BRIGHTNESS_less_PIN);
   if (Brightness_State == LOW && Brightness_LastState == HIGH) {
     if (Brightness > 0 && Brightness < 255) {
       Brightness += 5;
     } else {
-      Brightness = 35;
+      Brightness = 25;
+    }
+
+    matrix.setBrightness(Brightness);
+    EEPROM.write(5, Brightness);
+    EEPROM.commit();
+    Brightness_State_ts = millis();
+  } else if (Brightness_less_State == LOW && Brightness_less_LastState == HIGH) {
+    if (Brightness > 5 && Brightness < 255) {
+      Brightness -= 5;
+    } else {
+      Brightness = 250;
     }
 
     matrix.setBrightness(Brightness);
@@ -195,34 +215,43 @@ void BrightnessChangeLoop() {
     EEPROM.commit();
     Brightness_State_ts = millis();
   }
+
   Brightness_LastState = Brightness_State;
+  Brightness_less_LastState = Brightness_less_State;
+
 }
 
 void PrintTicker(String text,uint16_t colors, int l) {
-  int dx = -5;
-//  for (int x = matrix.width(); x > dx * l; x--){
-  for (int x = matrix.width(); x > dx * l; x--){
+  if ( PrintTicker_ts + 75 < millis() ) {
+    PrintTicker_ts =  millis();
+    int dx = -sizeof(char *);
+
     matrix.fillScreen(0);
-    matrix.setCursor(x, 0);                     // Отступ сверху
+    matrix.setCursor(XX, 0);
     matrix.setTextColor(colors);
+    matrix.print(text + " ");
     matrix.print(text);
-    matrix.show();                              // Функция показа текста
-    delay(75);
+
+    if( --XX  + matrix.width() + 3 < dx * l ) {
+      XX = 0;
+    }
+    matrix.show();
   }
+
 }
 
 void setup() {
   pinMode(SSID_PIN, INPUT_PULLUP);
   pinMode(FONT_PIN, INPUT_PULLUP);       // пин кнопки переключения шрифта
-  pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
+  pinMode(BRIGHTNESS_less_PIN, INPUT_PULLUP);
+  pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени
   pinMode(BRIGHTNESS_PIN, INPUT_PULLUP);
 
   matrix.begin();
   matrix.setTextWrap(false);
   matrix.setBrightness(Brightness);
   matrix.setTextColor(colors[0]);
-  
-  
+    
 #if defined(ESP32)
   // For ESP32/ESP32s2
   if (!EEPROM.begin(EEPROM_SIZE)) {
@@ -244,11 +273,19 @@ void setup() {
 
   // event handler
   webSocket.onEvent(webSocketEvent);
-
+  
   connectToHost();
   SW_Basic_OTA();
 
-  PrintTicker(privet, NumbersColor, privet.length());
+  int len = sizeof(char *) * privet.length();
+  for (int widthx = matrix.width(); widthx + matrix.width() > -len ; widthx--){
+    matrix.fillScreen(0);
+    matrix.setCursor(widthx, 0);
+    matrix.setTextColor(green);
+    matrix.print(privet);
+    matrix.show();
+    delay(75);
+  }
 
 }
 
@@ -259,31 +296,32 @@ void loop() {
   matrix.fillScreen(0);
   TimerLoop();
   ssidChangeLoop();
-  //FontChangeLoop();
+  FontChangeLoop();
   //LastTimeIDChangeLoop();
   BrightnessChangeLoop();
   printWifiState();
   printWsState();
   // PrintTime();
   
-  if (ssid_state_ts + 15500 > millis() ) {
-    // PrintSSID();
-    PrintTicker("Wifi: " + String(ssid[wifi_id]), blue, 6 + String(ssid[wifi_id]).length());
+  if (ssid_state_ts + 13500 > millis() ) {
+    PrintTicker("Wifi: " + String(ssid[wifi_id]), NumbersColor, 9 + String(ssid[wifi_id]).length());
   }
-  else if ( Brightness_State_ts  + 7500 > millis() ) {
-    matrix.setCursor(0, 0);                     // Отступ сверху
-    matrix.print("Br" + String(Brightness));
+  else if ( Brightness_State_ts  + 4500 > millis() ) {
+    matrix.setTextColor(blue);
+    matrix.setCursor(0, 0);
+    matrix.print("Br");
+    matrix.setCursor(10, 0);
+    matrix.print(".");
+    matrix.setCursor(15, 0);
+    matrix.print(String(Brightness));
+    matrix.show();
   } 
   else {
     PrintTime();
-  }
+    matrix.show();                              // Функция показа текста
+}
   //TimePrintXY(LastTime[LastTimeID], 0, 40, "LastTime " + String(LastTimeID) + ": ");
-  
-  //if (ssid_state_ts + 5000 > millis()) {
-  //  printSSID();
-  //} else {
-  //  TimePrintXY(TopTime, 0, 49, "Top Time: ");
-  //}
-  matrix.show();                              // Функция показа текста
-  //delay(1);
+
+  // matrix.show()
+  delayMicroseconds(1);
 }
