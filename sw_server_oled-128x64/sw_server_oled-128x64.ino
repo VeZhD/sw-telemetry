@@ -59,6 +59,7 @@ GND -> GND
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <SPIFFS.h>
+#include <ArduinoJson.h>
 
 #define SCREEN_WIDTH 128     // OLED display width, in pixels
 #define SCREEN_HEIGHT 64     // OLED display height, in pixels
@@ -156,12 +157,14 @@ void printtime(long time) {
   display.print("mode: " + modeString);
 
   display.setCursor(0, 56);
-  if (startStopState == LOW) {
+  if (startStopState == SensorLastState) {
     display.setTextColor(SSD1306_WHITE);
     display.print("Sensor is working! ");
+    startStopStateName = '1';
   } else {
     display.setTextColor(SSD1306_WHITE);
     display.print("Sensor error!!! ");
+    startStopStateName = '0';
   }
   
 }
@@ -178,7 +181,7 @@ void printip(void) {
 }
 
 void notifyClients(void) {
-  ws.textAll(String(!startStopState) + String(timerState) + String(currentTime));
+  ws.textAll(startStopStateName + String(timerState) + String(currentTime));
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
@@ -345,9 +348,24 @@ void setup() {
   //AsyncElegantOTA.begin(&server,web_user,web_pass);    // Start AsyncElegantOTA
   // Start server
   server.begin();
+
+#if ( defined(SENSOR_NPN) and defined(SENSOR_NO) ) or ( defined(SENSOR_PNP) and defined(SENSOR_NC) )
+  //startStopState = !digitalRead(SENSOR_PIN);
+  SensorState = LOW;
+  SensorLastState = HIGH;
+#elif ( defined(SENSOR_PNP) and defined(SENSOR_NO) ) or ( defined(SENSOR_NPN) and defined(SENSOR_NC) )
+  //startStopState = digitalRead(SENSOR_PIN);
+  SensorState = HIGH;
+  SensorLastState = LOW;
+#else
+#error "The type of sensor used is not specified"
+#endif
+
 }
 
 void loop() {
+  startStopState = digitalRead(SENSOR_PIN);
+
   dnsServer.processNextRequest();
   
   HotPlug_display();
@@ -369,19 +387,12 @@ else  {
   } 
 */
 
-#if ( defined(SENSOR_NPN) and defined(SENSOR_NO) ) or ( defined(SENSOR_PNP) and defined(SENSOR_NC) )
-  startStopState = !digitalRead(SENSOR_PIN);
-#elif ( defined(SENSOR_PNP) and defined(SENSOR_NO) ) or ( defined(SENSOR_NPN) and defined(SENSOR_NC) )
-  startStopState = digitalRead(SENSOR_PIN);
-#else
-#error "The type of sensor used is not specified"
-#endif
 
 switch (mode)
 {
   case 0: // Start-Stop timer
     if (timerState == 0) {
-      if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
+      if (startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay) {
         startTime = millis();
 
         for (int i = LastTimeCount - 1; i > 0; i--) {
@@ -397,7 +408,7 @@ switch (mode)
       startStopLastState = startStopState;
     } else {
       currentTime = millis() - startTime;
-      if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
+      if (startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay) {
         timerState = 0;
         lastChange = millis();
         CalcTopTime();
@@ -408,7 +419,7 @@ switch (mode)
     break;
 
   case 1:  // Срабатывание таймера по каждому пересечению луча, как китайский лаптаймер
-    if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
+    if (startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay) {
       currentTime = millis() - startTime;
       startTime = millis();
 
@@ -433,7 +444,7 @@ switch (mode)
     break;
 }
 
-  laptime = String(!startStopState) + String(timerState) + String(currentTime);
+  laptime = startStopStateName + String(timerState) + String(currentTime);
 
   //if (millis() - 1555 > lastWsUpTime) {
   //  notifyClients();

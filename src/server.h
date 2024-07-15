@@ -6,10 +6,15 @@
 #define LAST_TIME_PIN button02
 
 bool startStopState;
+bool startStopLastState;
+
+bool SensorState;
+bool SensorLastState;
+
 String startStopStateName;
+
 IPAddress myIP;
 String apIP = "";
-bool startStopLastState;
 uint8_t timerState = 0;
 uint32_t startTime = 0;
 uint32_t currentTime = 0;
@@ -34,18 +39,6 @@ String  modeString = "start-stop";
 
 uint8_t wifi_id = 0;
 
-
-// */
-
-/* API is quite simple :
-#include “esp_timer.h”
-
-then call the function
-
-int64_t esp_timer_get_time (void)
-
-*/
-
 bool ssid_state = HIGH;
 bool ssid_laststate = HIGH;
 uint32_t ssid_state_ts =  millis() ;
@@ -61,6 +54,8 @@ uint32_t LastTimeID_State_ts = millis();
 uint32_t TopTime = 599999;
 uint count = 0;
 
+// JsonDocument config_json;
+// const char* config_filename = "/config.txt";
 
 void CalcTopTime() {
   if  ((35000 < currentTime) && (currentTime < TopTime) && (currentTime > uint32_t(TopTime / 1.15) or TopTime == 599999) && (ssid_state_ts < millis() - 7500)) {
@@ -265,3 +260,16 @@ void TestPressButton03(void) {
 
   //button03_LastState = button03_State;  
 }
+
+
+// void LoadConfig(void) {
+//   File file = SPIFFS.open(config_filename);
+
+//   // Deserialize the JSON document
+//   DeserializationError error = deserializeJson(config_json, file);
+//   if (error)
+//     Serial.println(F("Failed to read file, using default configuration"));
+
+
+
+// }
