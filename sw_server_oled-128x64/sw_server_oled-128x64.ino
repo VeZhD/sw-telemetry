@@ -50,7 +50,7 @@ GND -> GND
 
 #include <WiFiClient.h>
 #include <ESPAsyncWebServer.h>
-#include <AsyncElegantOTA.h>
+//#include <AsyncElegantOTA.h>
 #include <DNSServer.h>
 #include <EEPROM.h>
 
@@ -341,8 +341,8 @@ void setup() {
     request->send(response);
   });
 
-  //OTAWeb_update_begin();
-  AsyncElegantOTA.begin(&server,web_user,web_pass);    // Start AsyncElegantOTA
+  OTAWeb_update_begin();
+  //AsyncElegantOTA.begin(&server,web_user,web_pass);    // Start AsyncElegantOTA
   // Start server
   server.begin();
 }
