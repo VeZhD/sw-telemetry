@@ -62,6 +62,10 @@ uint32_t Brightness_less_State_ts = millis();
 
 uint32_t PrintTicker_ts = millis();
 
+IPAddress myIP;
+String apIP;
+uint32_t printIP_ts  = millis();
+
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(32, 8, DATA_PIN,
   NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
   NEO_GRB + NEO_KHZ800);
@@ -75,11 +79,10 @@ const uint16_t blue = matrix.Color(0, 0, 255);
 const uint16_t red = matrix.Color(255, 0, 0);
 const uint16_t green = matrix.Color(0, 255, 0);
 
-int XX = 0;
+int shiftX = 0;
 
 // String privet = "Hi, MotoGymkhanist!!!"; 
 String privet = "Hi, Cone-Man! MotoGymkhana the best!!!";
-
 
 void printWifiState() {
   if (Connected == true) {
@@ -227,17 +230,36 @@ void PrintTicker(String text,uint16_t colors, int l) {
     int dx = -sizeof(char *);
 
     matrix.fillScreen(0);
-    matrix.setCursor(XX, 0);
+    matrix.setCursor(shiftX, 0);
     matrix.setTextColor(colors);
     matrix.print(text + " ");
     matrix.print(text);
 
-    if( --XX  + matrix.width() + 3 < dx * l ) {
-      XX = 0;
+    if( --shiftX  + matrix.width() + 3 < dx * l ) {
+      shiftX = 0;
     }
     matrix.show();
   }
 
+}
+
+void printIP(void) {
+  
+  ssid_state = digitalRead(SSID_PIN);
+  Brightness_less_State = digitalRead(BRIGHTNESS_less_PIN);
+  if (ssid_state == LOW && Brightness_less_LastState != Brightness_less_State && Brightness_less_State == LOW) {
+    apIP = "IP: ";
+    myIP = WiFi.localIP();
+    //################
+    apIP += String(myIP[0]) + ".";
+    apIP += String(myIP[1]) + ".";
+    apIP += String(myIP[2]) + ".";
+    apIP += String(myIP[3]);
+    //###################
+    PrintTicker(apIP, blue, apIP.length());
+    printIP_ts  = millis();
+    Brightness_less_LastState = Brightness_less_State;
+  }
 }
 
 void setup() {
@@ -268,6 +290,9 @@ void setup() {
   if ((EEPROM.read(0) >= 0) && (EEPROM.read(0) < (sizeof(ssid) / sizeof(char *)))) {
     wifi_id = EEPROM.read(0);
   }
+  if ((EEPROM.read(5) >= 0) && (EEPROM.read(5) < (sizeof(ssid) / sizeof(char *)))) {
+    Brightness = EEPROM.read(5);
+  }
 
   WiFi.onEvent(WiFiEvent);
 
@@ -296,6 +321,9 @@ void loop() {
   matrix.fillScreen(0);
   TimerLoop();
   ssidChangeLoop();
+  
+  printIP();
+  
   FontChangeLoop();
   //LastTimeIDChangeLoop();
   BrightnessChangeLoop();
@@ -305,6 +333,9 @@ void loop() {
   
   if (ssid_state_ts + 13500 > millis() ) {
     PrintTicker("Wifi: " + String(ssid[wifi_id]), NumbersColor, 9 + String(ssid[wifi_id]).length());
+  }
+  else if (printIP_ts + 20000 > millis() ) {
+    PrintTicker(apIP, blue, apIP.length());
   }
   else if ( Brightness_State_ts  + 4500 > millis() ) {
     matrix.setTextColor(blue);
