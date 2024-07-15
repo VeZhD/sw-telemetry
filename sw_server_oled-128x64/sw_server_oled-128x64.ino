@@ -79,6 +79,7 @@ AsyncWebSocket ws("/ws");
 #include "SSID_server.h"
 #include "html_ws.h"
 #include "html_get.h"
+#include "html_get_top-time.h"
 #include "favicon.h"
 #include "script.js.gz.h"
 #include "NoSleep.min.js.gz.h"
@@ -300,8 +301,19 @@ void setup() {
     // request->send(response);
   });
 
+  // server.on("/tt", HTTP_GET, [](AsyncWebServerRequest *request) {
+  //   request->send_P(200, "text/html", index_toptime);
+  //   // < or >
+  //   // AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", html_ws_h_gz, html_ws_h_gz_len);
+  //   // response->addHeader("Content-Encoding", "gzip");
+  //   // request->send(response);
+  // });
+
   server.on("/laptime", HTTP_GET, [](AsyncWebServerRequest* request) {
     request->send(200, "text/plain", laptime);
+  });
+  server.on("/toptime", HTTP_GET, [](AsyncWebServerRequest* request) {
+    request->send(200, "text/plain", String(TopTime));
   });
 
   server.on("/favicon.ico",  HTTP_GET, [](AsyncWebServerRequest *request){    
@@ -377,20 +389,21 @@ switch (mode)
         }
         LastTime[0] = currentTime;
 
-       timerState = 1;
-       currentTime = millis() - startTime;
-       lastChange = millis();
-       notifyClients();
-     }
-     startStopLastState = startStopState;
+        timerState = 1;
+        currentTime = millis() - startTime;
+        lastChange = millis();
+        notifyClients();
+      }
+      startStopLastState = startStopState;
     } else {
-       currentTime = millis() - startTime;
-     if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
-       timerState = 0;
-       lastChange = millis();
-       notifyClients();
-     }
-     startStopLastState = startStopState;
+      currentTime = millis() - startTime;
+      if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
+        timerState = 0;
+        lastChange = millis();
+        CalcTopTime();
+        notifyClients();
+        }
+      startStopLastState = startStopState;
     }
     break;
 
@@ -398,6 +411,8 @@ switch (mode)
     if (startStopState == HIGH && startStopLastState == LOW && millis() - lastChange > StopDelay) {
       currentTime = millis() - startTime;
       startTime = millis();
+
+      CalcTopTime();
 
       for (int i = LastTimeCount - 1; i > 0; i--) {
         LastTime[i] = LastTime[i - 1];

@@ -2,6 +2,10 @@
 #define DISPLAY_LASTTIME 1
 #endif
 
+#ifndef FONT_PIN
+#define FONT_PIN 1
+#endif
+
 #ifndef SW_BASIC_OTA_HOSTNAME
 #define SW_BASIC_OTA_HOSTNAME "SW_client"
 #endif
@@ -13,6 +17,9 @@
 bool ssid_state = HIGH;
 bool ssid_laststate = HIGH;
 uint32_t ssid_state_ts =  millis() ;
+
+bool Font_State = HIGH;
+bool Font_LastState = HIGH;
 
 WebSocketsClient webSocket;
 
@@ -181,7 +188,9 @@ void ResetTime() {
 
 void ssidChangeLoop() {
   ssid_state = digitalRead(SSID_PIN);
-  if (ssid_state == LOW && ssid_laststate == HIGH) {
+  Font_State = digitalRead(FONT_PIN);
+  if (ssid_state == LOW && Font_LastState != Font_State && Font_State == LOW) {
+  //if (ssid_state == LOW && ssid_laststate == HIGH) {
     if (wifi_id < (sizeof(ssid) / sizeof(char *) - 1) && wifi_id >= 0) {
       wifi_id++;
     } else {
@@ -193,6 +202,7 @@ void ssidChangeLoop() {
     ResetTime();
     delay(250);
     connectToHost();
+    Font_LastState = Font_State;
   }
   ssid_laststate = ssid_state;
 }

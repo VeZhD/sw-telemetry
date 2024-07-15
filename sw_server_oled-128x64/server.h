@@ -63,7 +63,7 @@ uint count = 0;
 
 
 void CalcTopTime() {
-  if  ((1500 < currentTime) && (currentTime < TopTime) && (currentTime > uint32_t(TopTime / 1.15) or TopTime == 599999) && (ssid_state_ts < millis() - 7500)) {
+  if  ((35000 < currentTime) && (currentTime < TopTime) && (currentTime > uint32_t(TopTime / 1.15) or TopTime == 599999) && (ssid_state_ts < millis() - 7500)) {
     TopTime = currentTime;
   }
   count++;
