@@ -24,6 +24,7 @@ GND -> GND
   #include <WiFi.h>
   #include <AsyncTCP.h>
   #include <Update.h>
+  #include <SPIFFS.h>
 
 #elif defined(ESP8266)
 //С ESP8266 не было полноценных тестов, возможно что-то отвалится, обязательно проверить используемые пины
@@ -58,7 +59,6 @@ GND -> GND
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <SPIFFS.h>
 #include <ArduinoJson.h>
 
 #define SCREEN_WIDTH 128     // OLED display width, in pixels
