@@ -1,9 +1,24 @@
+#define FONT_PIN      button01
+#define LAST_TIME_PIN button02
+
+#define SCREEN_WIDTH 128     // OLED display width, in pixels
+#define SCREEN_HEIGHT 64     // OLED display height, in pixels
+#define OLED_RESET -1        // Reset pin # (or -1 if sharing Arduino reset pin)
+#define SCREEN_ADDRESS 0x3C  ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+
+
 const uint8_t SizeX = 19;
 const uint8_t SizeY = 37;
 const uint8_t Font_Count = 3;
-uint8_t Font_ID = 0;
+//uint8_t Font_ID = 0;
 bool Font_State = HIGH;
 bool Font_LastState = HIGH;
+
+bool  HotPlug_State;
+bool  HotPlug_LastState = LOW;
+bool  display_enable;
 
 const bool digits[Font_Count][10][SizeY][SizeX] = {
   { {
@@ -1402,4 +1417,197 @@ const bool digits[Font_Count][10][SizeY][SizeX] = {
 
     } }
 };
+
+void InitDisplay(){
+  // if ((EEPROM.read(3) >= 0) && (EEPROM.read(3) <= Font_Count)) {
+  //   Font_ID = EEPROM.read(3);
+  // }
+  //Font_ID = config["timer"]["fontid"].as<int>();
+  display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
+  display.clearDisplay();
+  display.display();
+  delay(150); 
+
+}
+
+void HotPlug_display(void) {
+  HotPlug_State = digitalRead(HotPlug_pin);
+  if (HotPlug_State == LOW && HotPlug_LastState != HotPlug_State) {
+    delay(450);
+    display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
+    display.clearDisplay();
+    //display.display();
+  }
+
+  HotPlug_LastState = HotPlug_State;  
+}
+
+void drawDigit(int ddX, int digit) {
+  for (int y = 0; y < SizeY; y++) {
+    for (int x = 0; x < SizeX; x++) {
+      if (digits[Font_ID][digit][y][x] == 1) {
+        display.drawPixel(x + ddX, y, SSD1306_WHITE);
+      } else {
+        display.drawPixel(x + ddX, y, SSD1306_BLACK);       
+      }
+    }
+  }
+}
+
+void printtime(long time) {
+  int minutes = (int)(time / 60000) % 10;
+  int tSeconds = (int)(time % 60000 / 10000);
+  int seconds = (int)(time % 60000 % 10000 / 1000);
+  int mSeconds = (int)(time % 60000 % 1000 / 100);
+  int miSeconds = (int)(time % 60000 % 100 / 10);
+  int milSeconds = (int)(time % 60000 % 10);
+
+  display.clearDisplay();
+
+  if (Font_ID == Font_Count) {
+
+    display.setCursor(0, 0);  // Start at top-left corner
+
+    display.setTextSize(3);  // Draw 3X-scale text
+    display.setTextColor(SSD1306_WHITE);
+    display.print(minutes);
+    display.setTextSize(1);  // Draw 1X-scale text
+    display.print(F(" "));
+    display.fillRect(18, 6, 3, 3, SSD1306_WHITE);   // Draw :
+    display.fillRect(18, 12, 3, 3, SSD1306_WHITE);  // Draw :
+    display.setTextSize(3);                         // Draw 3X-scale text
+    display.print(tSeconds);
+    display.print(seconds);
+    display.setTextSize(1);  // Draw 1X-scale text
+    display.print(F(" "));
+    display.fillRect(60, 18, 3, 3, SSD1306_WHITE);  // Draw .
+    display.setTextSize(3);                         // Draw 3X-scale text
+    display.print(mSeconds);
+    display.print(miSeconds);
+    display.println(milSeconds);
+    display.setTextWrap(false);
+    display.setTextSize(1);
+    display.println("Wifi: " + config["wifi"]["list"][wifi_id]["ssid"].as<String>());
+    if ( wifiMode == "server") {
+      display.println("Pass:" + config["wifi"]["list"][wifi_id]["pass"].as<String>());
+    } else {
+      myIP = WiFi.localIP();
+      //################
+      apIP = String(myIP[0]) + ".";
+      apIP += String(myIP[1]) + ".";
+      apIP += String(myIP[2]) + ".";
+      apIP += String(myIP[3]);
+      //###################
+      display.print("IPv4: " + apIP);
+    }
+
+  } else {
+    int dX = 1;
+    // Minutes
+    drawDigit(dX + 0, minutes);
+    // Seconds
+    drawDigit(dX + (1 * SizeX) + 5, tSeconds);
+    drawDigit(dX + (2 * SizeX) + 6, seconds);
+    // milliseconds
+    drawDigit(dX + (3 * SizeX) + 11, mSeconds);
+    drawDigit(dX + (4 * SizeX) + 12, miSeconds);
+    drawDigit(dX + (5 * SizeX) + 13, milSeconds);
+    // Двоеточие
+    display.fillRect(dX + (1 * SizeX) + 1, int(SizeY / 3), 3, 3, SSD1306_WHITE);
+    display.fillRect(dX + (1 * SizeX) + 1, int(SizeY - SizeY / 3), 3, 3, SSD1306_WHITE);
+    // Точка
+    display.fillRect(dX + (3 * SizeX) + 7, SizeY - 3, 3, 3, SSD1306_WHITE);
+  }
+
+  display.setCursor(20, 40);
+  display.print("mode: " + modeString);
+
+  display.setCursor(0, 56);
+  if (startStopState == SensorLastState) {
+    display.setTextColor(SSD1306_WHITE);
+    display.print("Sensor is working! ");
+    startStopStateName = '1';
+  } else {
+    display.setTextColor(SSD1306_WHITE);
+    display.print("Sensor error!!! ");
+    startStopStateName = '0';
+  }
+  
+}
+
+void printip(void) {
+  display.clearDisplay();
+  display.setCursor(1, 32);  // Start at top-left corner
+  display.setTextSize(1);    // Draw 2X-scale text
+  display.setTextColor(SSD1306_WHITE);
+  display.println("Made by VeZhD");
+  display.println("Code from Alekssaff");
+  display.display();
+  delay(1500);
+}
+
+void FontChangeLoop() {
+  button01_State = digitalRead(button01);
+  if (button01_State == LOW && button01_LastState == HIGH) {
+    if (Font_ID >= 0 && Font_ID < Font_Count) {
+      Font_ID++;
+    } else {
+      Font_ID = 0;
+    }
+    display.clearDisplay();
+
+    config["timer"]["font_id"] = Font_ID;
+    saveConfig();
+
+    // EEPROM.write(3, Font_ID);
+    // EEPROM.commit();
+  }
+  button01_LastState = button01_State;
+}
+
+void TimePrintXY(uint32_t time, byte x, byte y, String name) {
+
+  uint8_t minutes = (int)(time / 60000) % 10;
+  uint8_t tSeconds = (int)(time % 60000 / 10000);
+  uint8_t seconds = (int)(time % 60000 % 10000 / 1000);
+  uint8_t mSeconds = (int)(time % 60000 % 1000 / 100);
+  uint8_t miSeconds = (int)(time % 60000 % 100 / 10);
+  uint8_t milSeconds = (int)(time % 60000 % 10);
+  display.setCursor(x, y); 
+  display.print(name + String(minutes) + ":" + String(tSeconds) + String(seconds) + "." + String(mSeconds) + String(miSeconds) + String(milSeconds));
+}
+
+void TestPressButton01(void) {
+   button01_State = digitalRead(button01);
+  if (button01_State == LOW) {
+    display.setCursor(0, 40);
+    display.print("1");
+  } else {
+    display.setCursor(0, 40);
+    display.print("#");
+  }
+}
+
+void TestPressButton02(void) {
+   button02_State = digitalRead(button02);
+  if (button02_State == LOW) {
+  display.setCursor(6, 40);
+  display.print("2");
+  } else {
+  display.setCursor(6, 40);
+  display.print("#");
+  }
+}
+
+void TestPressButton03(void) {
+   button03_State = digitalRead(button03);
+  if (button03_State == LOW) {
+  display.setCursor(12, 40);
+  display.print("3");
+  } else {
+  display.setCursor(12, 40);
+  display.print("#");
+  }
+}
+
 
