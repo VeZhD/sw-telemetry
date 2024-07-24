@@ -251,7 +251,7 @@ void SW_Basic_OTA() {
   // Hostname defaults to esp3232-[MAC]
   ArduinoOTA.setHostname(SW_BASIC_OTA_HOSTNAME);
   // No authentication by default
-  ArduinoOTA.setPassword(SW_BASIC_OTA_PASSWORD);
+  //ArduinoOTA.setPassword(SW_BASIC_OTA_PASSWORD);
   ArduinoOTA.onStart([]() {
       String type;
       if (ArduinoOTA.getCommand() == U_FLASH)

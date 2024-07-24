@@ -2,8 +2,8 @@ const uint8_t SizeX = 19;
 const uint8_t SizeY = 37;
 const uint8_t Font_Count = 3;
 uint8_t Font_ID = 0;
-bool Font_State = HIGH;
-bool Font_LastState = HIGH;
+//bool Font_State = HIGH;
+//bool Font_LastState = HIGH;
 
 const bool digits[Font_Count][10][SizeY][SizeX] = {
   { {
