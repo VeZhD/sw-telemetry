@@ -1419,10 +1419,6 @@ const bool digits[Font_Count][10][SizeY][SizeX] = {
 };
 
 void InitDisplay(){
-  // if ((EEPROM.read(3) >= 0) && (EEPROM.read(3) <= Font_Count)) {
-  //   Font_ID = EEPROM.read(3);
-  // }
-  //Font_ID = config["timer"]["fontid"].as<int>();
   display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
   display.clearDisplay();
   display.display();
@@ -1559,8 +1555,6 @@ void FontChangeLoop() {
     config["timer"]["font_id"] = Font_ID;
     saveConfig();
 
-    // EEPROM.write(3, Font_ID);
-    // EEPROM.commit();
   }
   button01_LastState = button01_State;
 }
@@ -1575,6 +1569,17 @@ void TimePrintXY(uint32_t time, byte x, byte y, String name) {
   uint8_t milSeconds = (int)(time % 60000 % 10);
   display.setCursor(x, y); 
   display.print(name + String(minutes) + ":" + String(tSeconds) + String(seconds) + "." + String(mSeconds) + String(miSeconds) + String(milSeconds));
+}
+
+uint ConvertTime(uint32_t time) {
+
+  uint8_t minutes = (int)(time / 60000) % 10;
+  uint8_t tSeconds = (int)(time % 60000 / 10000);
+  uint8_t seconds = (int)(time % 60000 % 10000 / 1000);
+  uint8_t mSeconds = (int)(time % 60000 % 1000 / 100);
+  uint8_t miSeconds = (int)(time % 60000 % 100 / 10);
+  uint8_t milSeconds = (int)(time % 60000 % 10);
+  return minutes * 100000 + tSeconds * 10000 + seconds * 1000 + mSeconds * 100 + miSeconds * 10 + milSeconds;
 }
 
 void TestPressButton01(void) {

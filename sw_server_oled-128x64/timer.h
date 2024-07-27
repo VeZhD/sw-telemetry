@@ -16,7 +16,7 @@ uint32_t lastChange;
 String laptime = "";
 
 uint32_t TopTime = 599999;
-uint count = 0;
+//uint count = 0;
 
 bool startStopState;
 bool startStopLastState;
@@ -24,10 +24,10 @@ bool startStopLastState;
 String startStopStateName;
 
 void CalcTopTime() {
-  if  ((24000 < currentTime) && (currentTime < TopTime) && (currentTime > uint32_t(TopTime / 1.15) or TopTime == 599999)) {
+  if  ((19000 < currentTime) && (currentTime < TopTime) && (currentTime > uint32_t(TopTime / 1.15) or TopTime == 599999)) {
     TopTime = currentTime;
   }
-  count++;
+  //count++;
 }
 
 

@@ -33,10 +33,6 @@ void saveDefaultConfigFile()
   json["wifi"]["list"][0]["ssid"] = "StopWatcher";
   json["wifi"]["list"][0]["pass"] = "StopWatcher";
 
-  // json["wifi"]["list"][1]["mode"] = "client";
-  // json["wifi"]["list"][1]["ssid"] = "VeZhD _ 2.4Ghz";
-  // json["wifi"]["list"][1]["pass"] = "0987ujmko0987";
-
   json["sensor"]["type"] = "npn";
   json["sensor"]["gate"] = "nc";
 
@@ -118,11 +114,6 @@ void InitConfig(){
   sensorType = config["sensor"]["type"].as<String>();
   gate = config["sensor"]["gate"].as<String>();
   wifiList = config["wifi"]["list"].as<JsonArray>();
-  
-  // if ( ( EEPROM.read(0) >= 0 ) && ( EEPROM.read(0) < wifiList.size() ) ) {
-  //   wifi_id = EEPROM.read(0);
-  // }
-
   wifi_id =  config["wifi"]["wifiid"].as<uint8_t>();
   wifiMode = config["wifi"]["list"][wifi_id]["mode"].as<String>();
   mode = config["timer"]["mode"].as<String>();
