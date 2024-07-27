@@ -6,10 +6,7 @@ VCC -> 5V
 GND -> GND
 *********/
 
-//#define SENSOR_NPN // при использовании сенсора с NPN укзать SENSOR_NPN, при использовании сенсора с PNP укзать SENSOR_PNP
-//#define SENSOR_NO // при использовании сенсора с NO(Normal Open, нормально открытый) укзать SENSOR_NO, при использовании сенсора NC(Normal Closed, нормально закрытый) укзать SENSOR_NC
-
-// pins for Lolin s2 mini, for other boards, check and replace the pins with yours:
+// pins for Lolin s2 mini, for other boards - check and replace the pins with yours:
 #define SENSOR_PIN 6     // пин подключения датчика луча
 
 #define button01    13
@@ -17,17 +14,14 @@ GND -> GND
 #define button03    10
 #define HotPlug_pin 11
 
-//#define EEPROM_SIZE   64    // размер EEPROM
-
 #if defined(ESP32)
   #pragma message "ESP32 stuff happening!"
 #else
   #error "This ain't a ESP32\ESPs2\ESPs3\etc., dumbo!"
 #endif
 
-// pins for Lolin s3 mini
+// pins for Lolin s3 mini and other boards on ESP32s3, check and replace the pins with yours:
 #ifdef CONFIG_IDF_TARGET_ESP32S3
-
 #undef SENSOR_PIN     // пин подключения датчика луча
 #undef button01
 #undef button02
@@ -35,20 +29,16 @@ GND -> GND
 #undef HotPlug_pin
 
 #define SENSOR_PIN    6     // пин подключения датчика луча
-
 #define button01      9
 #define button02      10
 #define button03      8
 #define HotPlug_pin   11
-
 #endif
 
 bool  button01_State;
 bool  button01_LastState = HIGH;
-
 bool  button02_State;
 bool  button02_LastState = HIGH;
-
 bool  button03_State;
 bool  button03_LastState = HIGH;
 
@@ -56,9 +46,7 @@ bool  button03_LastState = HIGH;
 #include <AsyncTCP.h>
 #include <WiFiClient.h>
 #include <ESPAsyncWebServer.h>
-//#include <AsyncElegantOTA.h>
 #include <DNSServer.h>
-// #include <EEPROM.h>
 #include <Update.h>
 #include <SPIFFS.h>
 
@@ -98,17 +86,6 @@ void setup() {
   pinMode(button02, INPUT_PULLUP);
   pinMode(button03, INPUT_PULLUP);
 
-
-  // #if defined(ESP32)
-  //   // For ESP32/ESP32s2/ESP32s3
-  //   if (!EEPROM.begin(EEPROM_SIZE)) {
-  //     delay(1000000);
-  //   } 
-  // #elif defined(ESP8266)
-  //   // For ESP8266
-  //   EEPROM.begin(EEPROM_SIZE);
-  // #endif
-
   InitConfig();
 
   InitDisplay();
@@ -130,16 +107,6 @@ void setup() {
 
 void loop() {
   startStopState = digitalRead(SENSOR_PIN);
-  
-  // if ( ( sensorType == "npn" and gate == "no" ) or ( sensorType == "pnp" and gate == "nc" ) ) {
-  //   startStopState = !digitalRead(SENSOR_PIN);
-  //   // SensorState = LOW;
-  //   // SensorLastState = HIGH;
-  // } else if ( ( sensorType == "pnp" and gate == "no" ) or ( sensorType == "npn" and gate == "nc" ) ) {
-  //   startStopState = digitalRead(SENSOR_PIN);
-  //   // SensorState = HIGH;
-  //   // SensorLastState = LOW;
-  // }
 
   if ( mode == "ss"){ // Start-Stop timer
       if (timerState == 0) {

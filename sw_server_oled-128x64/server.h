@@ -67,8 +67,6 @@ void ssidChangeLoop() {
     InitWifi();
     config["wifi"]["wifiid"] = String(wifi_id);
     saveConfig();
-    // EEPROM.write(0, wifi_id);
-    // EEPROM.commit();
     ssid_state_ts = millis();
     button02_LastState = button01_State;  
     }
