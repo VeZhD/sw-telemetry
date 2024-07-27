@@ -33,10 +33,6 @@ void saveDefaultConfigFile()
   json["wifi"]["list"][0]["ssid"] = "StopWatcher";
   json["wifi"]["list"][0]["pass"] = "StopWatcher";
 
-  // json["wifi"]["list"][1]["mode"] = "client";
-  // json["wifi"]["list"][1]["ssid"] = "VeZhD _ 2.4Ghz";
-  // json["wifi"]["list"][1]["pass"] = "0987ujmko0987";
-
   json["sensor"]["type"] = "npn";
   json["sensor"]["gate"] = "nc";
 
