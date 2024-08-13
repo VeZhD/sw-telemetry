@@ -55,7 +55,8 @@ void InitDNS(){
 void ssidChangeLoop() {
   button02_State = digitalRead(button02);
   button03_State = digitalRead(button03);
-  if (button02_State == LOW && button02_LastState != button02_State && button03_State == LOW) {
+  if ( wifiList.size() - 1 !=0  && button02_State == LOW && button02_LastState != button02_State && button03_State == LOW ) {
+  // if ( button02_State == LOW && button02_LastState != button02_State && button03_State == LOW ) {
    // ResetTime();
     if (wifi_id < wifiList.size() - 1) {
       wifi_id++;

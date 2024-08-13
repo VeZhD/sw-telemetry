@@ -62,7 +62,7 @@ MatrixPanel_I2S_DMA *dma_display = new MatrixPanel_I2S_DMA(mxconfig);
 // end подключение матрицы
 
 uint16_t TIME_COLOR = dma_display->color444(0, 255, 0);
-uint16_t DOT_COLOR = dma_display->color444(0, 255, 0);
+uint16_t DOT_COLOR = dma_display->color444(255, 0, 0);
 const uint16_t BLACK_COLOR = dma_display->color444(0, 0, 0);
 
 byte Brightness = 155;
@@ -123,13 +123,13 @@ void drawDigit(int ddX, int digit) {
 
 void PrintTime() {
 
-  if (StartStopState == 0) {
-    TIME_COLOR = dma_display->color444(255, 0, 0);
-    DOT_COLOR = dma_display->color444(0, 255, 0);
-  } else {
-    TIME_COLOR = dma_display->color444(0, 255, 0);
-    DOT_COLOR = dma_display->color444(255, 0, 0);
-  }
+  // if (StartStopState == 0) {
+  //   TIME_COLOR = dma_display->color444(255, 0, 0);
+  //   DOT_COLOR = dma_display->color444(0, 255, 0);
+  // } else {
+  //   TIME_COLOR = dma_display->color444(0, 255, 0);
+  //   DOT_COLOR = dma_display->color444(255, 0, 0);
+  // }
 
   if (Font_ID == Font_Count) {
     const uint8_t font_size = 4;
