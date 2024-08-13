@@ -214,7 +214,7 @@ void TimerLoop() {
     }
     LastTime[0] = LastCurrentTime;
 
-    StartTime = millis();
+    //StartTime = millis();
     CurrentTime = millis() - StartTime;
     TimerLastState = TimerState;
   } else if (TimerState == HIGH) {

@@ -155,8 +155,10 @@ void loop() {
     
       if (millis() - startTime >= PrintDelay) {
         currentTime = millis() - startTime;
-        timerState = 1;
-        notifyClients();
+        if ( timerState == 0 ){ 
+          timerState = 1;
+          notifyClients();
+        }
       }
   }
 
