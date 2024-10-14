@@ -15,7 +15,7 @@ GND -> GND
   #define SSID_PIN        10  // пин кнопки переключения wifi сети
   #define FONT_PIN        11  // пин кнопки переключения шрифта
   #define LAST_TIME_PIN   14  // пин кнопки переключения предыдущего времени(1-10)
-  #define BRIGHTNESS_less_PIN   13  // пин кнопки переключения предыдущего времени(1-10)
+  #define BRIGHTNESS_less_PIN   13  // пин кнопки переключения предыдущего времени(1-10) // not used in this sketch
   #define BRIGHTNESS_PIN  12  // пин кнопки яркости
 
   #define DATA_PIN        16  // пин подключния матрицы
@@ -302,15 +302,15 @@ void setup() {
   connectToHost();
   SW_Basic_OTA();
 
-  int len = sizeof(char *) * privet.length();
-  for (int widthx = matrix.width(); widthx + matrix.width() > -len ; widthx--){
-    matrix.fillScreen(0);
-    matrix.setCursor(widthx, 0);
-    matrix.setTextColor(green);
-    matrix.print(privet);
-    matrix.show();
-    delay(75);
-  }
+  // int len = sizeof(char *) * privet.length();
+  // for (int widthx = matrix.width(); widthx + matrix.width() > -len ; widthx--){
+  //   matrix.fillScreen(0);
+  //   matrix.setCursor(widthx, 0);
+  //   matrix.setTextColor(green);
+  //   matrix.print(privet);
+  //   matrix.show();
+  //   delay(75);
+  // }
 
 }
 
