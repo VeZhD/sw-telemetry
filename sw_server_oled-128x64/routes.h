@@ -24,6 +24,10 @@ void InitRoutes(){
     request->send_P(200, "text/html", index_html);
   });
 
+  server.on("/alt", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/html", index_html_alt);
+  });
+
   server.on("/check", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, JSON_CONFIG_FILE );
   });
@@ -110,4 +114,23 @@ void InitRoutes(){
       request->send(200, "text/plain", "Top Time: " + message + "\n\nMilliSeconds: " + String(tmpms)  + "\nSeconds: " + String(tmps)  + "\nMinutes: " + String(tmpm)  + "\n\nTopTime in MilliSeconds: " + String(TopTime) );
   });
 
+  server.on("/status", HTTP_GET, [](AsyncWebServerRequest *request) {
+  // Endpoint used by index_html_alt to get the current time and race state
+    JsonDocument jsonResp;
+    jsonResp["laptime"] = currentTime;
+    jsonResp["toptime"] = TopTime;
+    jsonResp["raceState"] = timerState;
+
+    // Create JSON array inside document
+    JsonArray arr = jsonResp.createNestedArray("LastTime");
+
+    for (uint8_t i = 0; i < LastTimeCount; i++) {
+      arr.add(LastTime[i]);
+    }
+
+    jsonResp["mode"] = mode;
+    String JsonSerialised;
+    serializeJsonPretty(jsonResp, JsonSerialised);
+    request->send(200, "application/json", JsonSerialised);
+  });
 }

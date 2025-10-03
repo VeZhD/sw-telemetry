@@ -64,6 +64,7 @@ bool  button03_LastState = HIGH;
 #include "ota_update.h"
 
 #include "html_get.h"
+#include "html_get_alt.h"
 #include "favicon.h"
 #include "script.js.gz.h"
 #include "NoSleep.min.js.gz.h"
