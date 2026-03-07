@@ -1,12 +1,3 @@
-/*********
-display OLED i2c 128*64 witch WEMOS(LOLIN) S2 mini
-SCL -> D1(GPIO5) For ESP8266(Wemos D1 mini) / 35 For ESP32s2(Wemos(Lolin) S2 mini)
-SDA -> D2(GPIO4) For ESP8266(Wemos D1 mini) / 33 For ESP32s2(Wemos(Lolin) S2 mini)
-VCC -> 5V
-GND -> GND
-*********/
-#define SW_Basic_OTA_HOSTNAME "SWC_e-INK"  // HostName для ESP, по умолчанию "SW_client", без ковычек
-//#define SW_Basic_OTA_PASSWORD "passwordSWC_OLED"  // пароль для OTA обновления, по умолчанию "passwordSW_client", без ковычек
 
 #define BUSY_PIN  39
 #define RST_PIN   37  // Reset
@@ -16,15 +7,16 @@ GND -> GND
 #define DIN_PIN   16  // SDI
 
 #define SSID_PIN      34   // пин кнопки переключения wifi сети
-#define FONT_PIN      36   // пин кнопки переключения шрифта
+// #define FONT_PIN      36   // пин кнопки переключения шрифта
 #define LAST_TIME_PIN 38   // пин кнопки переключения предыдущего времени(1-10)
 
-#define EEPROM_SIZE   64    // размер EEPROM
-
 #include <WiFi.h>
+#include <AsyncTCP.h>
 #include <WebSocketsClient.h>
-#include <EEPROM.h>
-#include <ArduinoOTA.h>
+#include <ESPAsyncWebServer.h>
+#include <Update.h>
+#include <SPIFFS.h>
+#include <ArduinoJson.h>
 
 #include <GxEPD2_BW.h>
 #include <GxEPD2_3C.h>
@@ -32,15 +24,26 @@ GND -> GND
 
 // Выбор дисплея - размер, версия, кол-во цветов
 // select the display class and display driver class in the following file (new style):
+// I use GxEPD2_213_B74
 #include "GxEPD2_display_selection_new_style.h"
 
 U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;
 
-#include "SSID_client.h"      // При необходимости изменить название и паролт WiFi точки доступа
+AsyncWebServer server(80);
+
+// uint8_t Font_ID = 0;
+// const uint8_t Font_Count = 1;
+
+#include "config.h"
 #include "client.h"
+#include "ota_update.h"
+
+#include "html.h"
+#include "favicon.h"
+#include "routes.h"
 
 uint32_t PreviousPrintTime = millis();
-uint PrintDelay = 473;
+uint PrintDelay = 1554;
 uint16_t bg = GxEPD_WHITE;
 uint16_t fg = GxEPD_BLACK;
 
@@ -71,7 +74,13 @@ void printWsState() {
 void printSSID() {
   u8g2Fonts.setFont(u8g2_font_9x15_tf);
   u8g2Fonts.setCursor(32, 10);
-  u8g2Fonts.print("Wifi: " + String(ssid[wifi_id]));
+  u8g2Fonts.print("Wifi: " + config["wifi"]["list"][wifi_id]["ssid"].as<String>());
+}
+
+void printPass() {
+  u8g2Fonts.setFont(u8g2_font_9x15_tf);
+  u8g2Fonts.setCursor(16, 10);
+  u8g2Fonts.print("Pass: " + config["wifi"]["list"][wifi_id]["pass"].as<String>());
 }
 
 void PrintTime() {
@@ -106,9 +115,19 @@ void TimePrintXY(uint32_t time, byte x, byte y, String name) {
 
 void setup() {
   pinMode(SSID_PIN, INPUT_PULLUP);
-  pinMode(FONT_PIN, INPUT_PULLUP);       // пин кнопки переключения шрифта
+  // pinMode(FONT_PIN, INPUT_PULLUP);       // пин кнопки переключения шрифта
   pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени(1-10)
   
+  InitConfig();
+
+  // 
+  if ( digitalRead(SSID_PIN) == LOW ) {
+    wifi_id = 0;
+    wifiMode = "server";
+    ssid_laststate = LOW;
+  }
+
+  // Init Display
   SPI.begin(CLK_PIN, -1, DIN_PIN, CS_PIN);
   //display.init(115200); // default 10ms reset pulse, e.g. for bare panels with DESPI-C02
   display.init(115200, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
@@ -119,48 +138,77 @@ void setup() {
   u8g2Fonts.setBackgroundColor(bg);         // apply Adafruit GFX color
   display.fillScreen(bg);
 
-  if (!EEPROM.begin(EEPROM_SIZE)) {
-    delay(1000000);
-  } 
-
-  if ((EEPROM.read(0) >= 0) && (EEPROM.read(0) < (sizeof(ssid) / sizeof(char *)))) {
-    wifi_id = EEPROM.read(0);
-  }
+  InitWifi();
 
   WiFi.onEvent(WiFiEvent);
-
   // event handler
   webSocket.onEvent(webSocketEvent);
 
-  connectToHost();
-  SW_Basic_OTA();
+  InitRoutes();
+
+  OTAWeb_update_begin();
+
+  server.begin();
+
 }
 
 void loop() {
-  ArduinoOTA.handle();
+  webSocket.loop();
 
   TimerLoop();
+
+  get_IP();
+
   ssidChangeLoop();
   //FontChangeLoop();
+
   LastTimeIDChangeLoop();
-  webSocket.loop();
+  
   if (millis() - PreviousPrintTime >= PrintDelay) {
     PreviousPrintTime = millis();
-    
-    display.fillScreen(bg);
-    PrintTime();
-    printWifiState();
-    printWsState();
-  
-    TimePrintXY(LastTime[LastTimeID], 16, 10, "LastTime " + String(LastTimeID) + ": ");
 
-    if (ssid_state_ts + 7500 > millis()) {
+    display.fillScreen(bg);
+    
+    if ( wifiMode == "server" ){
+
+      u8g2Fonts.setFont(u8g2_font_9x15_tf);
+      u8g2Fonts.setCursor(80, 10);
+      u8g2Fonts.print("Chip: " + String(ESP.getChipModel()));
+      // myOLED.print("Chip: " + String(ESP.getChipModel()), 0, 0);
+      // myOLED.print(WiFi.getHostname(), 0, 16);
+
+      u8g2Fonts.setFont(u8g2_font_9x15_tf);
+      u8g2Fonts.setCursor(48, 10);
+      u8g2Fonts.print("IP: " + WiFi.softAPIP().toString());
       printSSID();
-    } else {
-      TimePrintXY(TopTime, 32, 28, "Top Time: ");
+      printPass();
+
+    } else if ( wifiMode == "client") { 
+    
+      PrintTime();
+      printWifiState();
+      printWsState();
+
+      if (printIP_ts > millis() ) {
+
+        u8g2Fonts.setFont(u8g2_font_9x15_tf);
+        u8g2Fonts.setCursor(16, 10);
+        u8g2Fonts.print("IP: " + WiFi.localIP().toString());
+      
+      } else {
+
+        TimePrintXY(LastTime[LastTimeID], 16, 10, "LastTime " + String(LastTimeID) + ": ");
+      }
+
+      if (ssid_state_ts > millis()) {
+        printSSID();
+        } else {
+        TimePrintXY(TopTime, 32, 28, "Top Time: ");
+      }
     }
-  
+
     display.display(true); // full update
+
   }
   //delay(5);
 }

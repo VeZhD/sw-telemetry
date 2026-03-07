@@ -1,19 +1,13 @@
 
-#define JSON_CONFIG_FILE "/config_server_OLED.json"
+#define JSON_CONFIG_FILE "/config_client.json"
 // config vars
 JsonDocument config;
-String gate;
-String sensorType;
+
+
 String wifiMode;
 JsonArray wifiList;
-String mode;
-String modeString = "start-stop";
-uint StopDelay = 1650;    // задержка срабатывания на луч в миллисекундах
-uint PrintDelay = 10000;  // задержка отображения результата в режиме кругового таймера
-uint8_t wifi_id = 0;
-uint8_t Font_ID = 0;
-bool SensorState;
-bool SensorLastState;
+uint8_t wifi_id = 1;
+//uint8_t Font_ID = 0;
 
 void saveDefaultConfigFile()
 // Save Config in JSON format
@@ -24,25 +18,26 @@ void saveDefaultConfigFile()
 
   for (int i = 0; i < 17; i = i + 8) {
     chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
+    // chipId |= ((WiFi.macAddress().uint64_t() >> (40 - i)) & 0xff) << i;
   }
 
   // Create a JSON document
   JsonDocument json;
-  json["timer"]["mode"] = "ss";
-  json["timer"]["printDelay"] = 10000;
-  json["timer"]["stopDelay"] = 1650;
   json["timer"]["font_id"] = 0;
+  json["timer"]["Brightness"] = 125;
 
-  json["wifi"]["wifiid"] = 0;
+  json["wifi"]["wifiid"] = 1;
 
   json["wifi"]["list"][0]["mode"] = "server";
-  json["wifi"]["list"][0]["ssid"] = "SWT_" + String(chipId);
+  json["wifi"]["list"][0]["ssid"] = "SWc_" + String(chipId);
   json["wifi"]["list"][0]["pass"] = String(chipId) + "pass";
-  // json["wifi"]["list"][0]["ssid"] = "StopWatcher";
-  // json["wifi"]["list"][0]["pass"] = "StopWatcher";
-
-  json["sensor"]["type"] = "npn";
-  json["sensor"]["gate"] = "nc";
+  json["wifi"]["list"][0]["ssid_channel"] = 1;
+  json["wifi"]["list"][0]["ssid_hidden"] = 0;
+  json["wifi"]["list"][0]["max_connection"] = 4;
+  // json["wifi"]["list"][0]["wsSSL"] = "false";
+  // json["wifi"]["list"][0]["wsHost"] = "192.168.4.1";
+  // json["wifi"]["list"][0]["wsPath"] = "/";
+  // json["wifi"]["list"][0]["wsPort"] = 80;
 
   // Open config file
   File configFile = SPIFFS.open(JSON_CONFIG_FILE, "w");
@@ -118,39 +113,19 @@ JsonDocument loadConfigFile()
 }
 
 void InitConfig(){
+  // if (SPIFFS.begin(false) || SPIFFS.begin(true)){
+  //   Serial.println("mounted file system");
+  //   saveDefaultConfigFile();
+  // }
   config = loadConfigFile();
-  sensorType = config["sensor"]["type"].as<String>();
-  gate = config["sensor"]["gate"].as<String>();
+  
   wifiList = config["wifi"]["list"].as<JsonArray>();
   wifi_id =  config["wifi"]["wifiid"].as<uint8_t>();
   wifiMode = config["wifi"]["list"][wifi_id]["mode"].as<String>();
-  mode = config["timer"]["mode"].as<String>();
-  PrintDelay = config["timer"]["printDelay"].as<int>();
-  StopDelay = config["timer"]["stopDelay"].as<int>();
+
+  #ifdef FONT_PIN
   Font_ID = config["timer"]["font_id"].as<int>();
-
-  if (sensorType == "npn"){
-    pinMode(SENSOR_PIN, INPUT_PULLUP);  
-  } else if (sensorType == "pnp") {
-    pinMode(SENSOR_PIN, INPUT);    
-  }
-
-  if ( mode == "ss" ){
-    modeString = "start-stop";
-  } else {
-    modeString = "lap-timer";
-  }
-
-  if ( ( sensorType == "npn" and gate == "no" ) or ( sensorType == "pnp" and gate == "nc" ) ) {
-    // startStopState = !digitalRead(SENSOR_PIN);
-    SensorState = LOW;
-    SensorLastState = HIGH;
-  } else if ( ( sensorType == "pnp" and gate == "no" ) or ( sensorType == "npn" and gate == "nc" ) ) {
-    // startStopState = digitalRead(SENSOR_PIN);
-    SensorState = HIGH;
-    SensorLastState = LOW;
-  }
-
+  #endif
 }
 
 void saveConfigFile(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){

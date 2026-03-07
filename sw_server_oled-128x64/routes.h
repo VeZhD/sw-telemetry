@@ -32,10 +32,19 @@ void InitRoutes(){
     request->send(200, "text/plain", laptime);
   });
 
+
   server.on("/toptime", HTTP_GET, [](AsyncWebServerRequest* request) {
     request->send(200, "text/plain", String(TopTime));
   });
   
+  server.on("/currentTime1", HTTP_GET, [](AsyncWebServerRequest* request) {
+    request->send(200, "text/plain", String(currentTimeArray[0]));
+  });
+  
+  server.on("/currentTime2ц", HTTP_GET, [](AsyncWebServerRequest* request) {
+    request->send(200, "text/plain", String(currentTimeArray[1]));
+  });
+
   server.on("/config", HTTP_GET, [](AsyncWebServerRequest* request) {
     String resp;
     serializeJson(config, resp);

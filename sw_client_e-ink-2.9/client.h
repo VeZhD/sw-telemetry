@@ -1,31 +1,23 @@
+//#include <cstddef>
 #ifndef DISPLAY_LASTTIME
 #define DISPLAY_LASTTIME 1
 #endif
 
-#ifndef FONT_PIN
-#define FONT_PIN 1
-#endif
-
-#ifndef SW_BASIC_OTA_HOSTNAME
-#define SW_BASIC_OTA_HOSTNAME "SW_client"
-#endif
-
-//#ifndef SW_BASIC_OTA_PASSWORD
-//#define SW_BASIC_OTA_PASSWORD "passwordSW_client"
-//#endif
-
 bool ssid_state = HIGH;
 bool ssid_laststate = HIGH;
-uint32_t ssid_state_ts =  millis() ;
+uint32_t ssid_state_ts = 0 ;
 
 bool Font_State = HIGH;
 bool Font_LastState = HIGH;
 
 WebSocketsClient webSocket;
 
-//unsigned long messageInterval = 5000;
 bool Connected = false;
 bool ConnectedWS = false;
+
+// IPAddress myIP;
+// String apIP;
+uint32_t printIP_ts  = 0;
 
 uint32_t StartTime = 0;
 uint32_t CurrentTime = 0;
@@ -53,6 +45,43 @@ uint count = 0;
 
 int StartStopLastState;
 
+void connectToHost() {
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_OFF);
+  delay(100);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(config["wifi"]["list"][wifi_id]["ssid"].as<String>(), config["wifi"]["list"][wifi_id]["pass"].as<String>());
+  //WiFi.begin(ssid[wifi_id], password[wifi_id]);
+}
+
+void StartAPMode() {
+  WiFi.softAPdisconnect(true);
+  WiFi.mode(WIFI_OFF);
+  delay(200);
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(\
+    // SSID Name
+    config["wifi"]["list"][wifi_id]["ssid"].as<String>(), \
+    // SSID Password
+    config["wifi"]["list"][wifi_id]["pass"].as<String>(), \
+    // Wi-Fi Channel 
+    config["wifi"]["list"][wifi_id]["ssid_channel"].as<uint8_t>(), \
+    // Wi-Fi Hidenn: 0 - видно, 1 - скрыто
+    config["wifi"]["list"][wifi_id]["ssid_hidden"].as<uint8_t>(), \
+    // max_connection: 1-10, рекомендуетя 4-6, чем меньше, тем стабильнее подключение
+    config["wifi"]["list"][wifi_id]["max_connection"].as<uint8_t>()); 
+  //WiFi.softAP(ssid[wifi_id], password[wifi_id], 13); 
+}
+
+void InitWifi(){
+
+  if ( wifiMode == "server" ){
+    webSocket.disconnect();
+    StartAPMode();
+  } else if ( wifiMode == "client") {
+    connectToHost();
+  }
+}
 
 void SetTime() {
   CurrentMinutes = (int)(CurrentTime / 60000) % 10;
@@ -78,8 +107,14 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
       break;
     case WStype_TEXT:
       StartStopState = payload_str.substring(0, 1).toInt();
-      TimerState = payload_str.substring(1, 2).toInt();
-      CurrentTime = payload_str.substring(2).toInt();
+      if ( config["wifi"]["list"][wifi_id]["ssid"].as<String>().substring(0, 20) == "MOTO_TRAINING_SINGLE" ) {
+        TimerState = payload_str.substring(10, 11).toInt();
+        CurrentTime = payload_str.substring(21,27).toInt();
+      } else {
+        TimerState = payload_str.substring(1, 2).toInt();
+        CurrentTime = payload_str.substring(2).toInt();
+      }
+
       StartTime = millis() - CurrentTime;
       SetTime();
       break;
@@ -103,7 +138,6 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
   }
 }
 
-#if defined(ESP32)
 void WiFiEvent(WiFiEvent_t event) {
   switch (event) {
     case ARDUINO_EVENT_WIFI_READY:
@@ -121,48 +155,32 @@ void WiFiEvent(WiFiEvent_t event) {
       Connected = false;
       break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-      if (wsSSL[wifi_id] == true) {
-        webSocket.beginSSL(wsHost[wifi_id], wsPort[wifi_id], wsPath[wifi_id]);
+
+      // if ( wifiMode == "server" ){
+      //   webSocket.disconnect();
+      //   break;
+      // }
+
+      if ( config["wifi"]["list"][wifi_id]["ssid"].as<String>().substring(0, 20) == "MOTO_TRAINING_SINGLE" ) {
+        webSocket.begin("10.10.10.100", 89, "/");
+      } else if ( config["wifi"]["list"][wifi_id]["wsPort"].as<int>() == 8000 ) {
+        webSocket.beginSSL(config["wifi"]["list"][wifi_id]["wsHost"].as<String>(), config["wifi"]["list"][wifi_id]["wsPort"].as<int>(), config["wifi"]["list"][wifi_id]["wsPath"].as<String>());
+      } else  if ( config["wifi"]["list"][wifi_id]["wsPort"].as<int>() == 80 ){
+        webSocket.begin(config["wifi"]["list"][wifi_id]["wsHost"].as<String>(), config["wifi"]["list"][wifi_id]["wsPort"].as<int>(), config["wifi"]["list"][wifi_id]["wsPath"].as<String>());
       } else {
-        webSocket.begin(wsHost[wifi_id], wsPort[wifi_id], wsPath[wifi_id]);
+         webSocket.begin("192.168.4.1", 80, "/ws");
       }
+
+      // if (config["wifi"]["list"][wifi_id]["wsSSL"].as<bool>() == true) {
+      //   webSocket.beginSSL(config["wifi"]["list"][wifi_id]["wsHost"].as<String>(), config["wifi"]["list"][wifi_id]["wsPort"].as<int>(), config["wifi"]["list"][wifi_id]["wsPath"].as<String>());
+      // } else {
+      //   webSocket.begin(config["wifi"]["list"][wifi_id]["wsHost"].as<String>(), config["wifi"]["list"][wifi_id]["wsPort"].as<int>(), config["wifi"]["list"][wifi_id]["wsPath"].as<String>());
+      // }
+     
+      // webSocket.begin(wsHost[wifi_id], wsPort[wifi_id], wsPath[wifi_id]);
+      
       break;
   }
-}
-#endif
-
-#if defined(ESP8266)
-void WiFiEvent(WiFiEvent_t event) {
-  switch (event) {
-    case WIFI_EVENT_STAMODE_CONNECTED:
-      //Serial.println("WIFI_EVENT_STAMODE_CONNECTED");
-      Connected = true;
-      break;
-    case WIFI_EVENT_STAMODE_AUTHMODE_CHANGE:
-      //Serial.println("WIFI_EVENT_STAMODE_AUTHMODE_CHANGE");
-      break;
-    case WIFI_EVENT_STAMODE_GOT_IP:
-      //Serial.println("WIFI_EVENT_STAMODE_GOT_IP");
-      //Serial.println(WiFi.localIP().toString());
-      if (wsSSL[wifi_id] == true) {
-        webSocket.beginSSL(wsHost[wifi_id], wsPort[wifi_id], wsPath[wifi_id]);
-      } else {
-        webSocket.begin(wsHost[wifi_id], wsPort[wifi_id], wsPath[wifi_id]);
-      }
-      break;
-    case WIFI_EVENT_STAMODE_DISCONNECTED:
-      //Serial.println("WIFI_EVENT_STAMODE_DISCONNECTED");
-      Connected = false;
-      break;
-    case WIFI_EVENT_SOFTAPMODE_PROBEREQRECVED:
-      break;
-  }
-}
-#endif
-
-void connectToHost() {
-  WiFi.disconnect(true);
-  WiFi.begin(ssid[wifi_id], password[wifi_id]);
 }
 
 void CalcTopTime() {
@@ -188,21 +206,41 @@ void ResetTime() {
 
 void ssidChangeLoop() {
   ssid_state = digitalRead(SSID_PIN);
+
+#ifdef ws2811
   Font_State = digitalRead(FONT_PIN);
-  if (ssid_state == LOW && Font_LastState != Font_State && Font_State == LOW) {
-  //if (ssid_state == LOW && ssid_laststate == HIGH) {
-    if (wifi_id < (sizeof(ssid) / sizeof(char *) - 1) && wifi_id >= 0) {
+  if ( wifiList.size() - 1 !=0  && ssid_state == LOW && Font_LastState != Font_State && Font_State == LOW) {
+#endif
+
+#ifndef ws2811
+  if ( wifiList.size() - 1 !=0  && ssid_state == LOW && ssid_laststate == HIGH) {
+#endif
+
+    // if (wifi_id < (sizeof(ssid) / sizeof(char *) - 1) && wifi_id >= 0) {
+    //   wifi_id++;
+    // } else {
+    //   wifi_id = 0;
+    // }
+    if (wifi_id < wifiList.size() - 1) {
       wifi_id++;
     } else {
-      wifi_id = 0;
+      wifi_id = 1;
+
     }
-    EEPROM.write(0, wifi_id);
-    EEPROM.commit();
-    ssid_state_ts = millis();
+    wifiMode = wifiList[wifi_id]["mode"].as<String>();
     ResetTime();
-    delay(250);
-    connectToHost();
+    // delay(250);
+    // connectToHost();
+    InitWifi();
+    config["wifi"]["wifiid"] = String(wifi_id);
+    saveConfig();
+    ssid_state_ts = millis() + 13500;
+
+#ifdef ws2811
     Font_LastState = Font_State;
+    shiftX = 0;
+#endif
+
   }
   ssid_laststate = ssid_state;
 }
@@ -229,6 +267,31 @@ void TimerLoop() {
   SetTime();
 }
 
+#ifdef LAST_TIME_PIN
+void get_IP(void) {
+
+  ssid_state = digitalRead(SSID_PIN);
+  LastTimeID_State = digitalRead(LAST_TIME_PIN);
+  // if (ssid_state == LOW && LastTimeID_State != LastTimeID_LastState && LastTimeID_State == LOW) {
+  if (ssid_state == LOW && LAST_TIME_PIN == LOW && ssid_state != ssid_laststate ) {
+    // apIP = "IP: ";
+    // myIP = WiFi.localIP();
+    // //################
+    // apIP += String(myIP[0]) + ".";
+    // apIP += String(myIP[1]) + ".";
+    // apIP += String(myIP[2]) + ".";
+    // apIP += String(myIP[3]);
+    //###################
+    #ifdef ws2811
+    shiftX = 0;
+    #endif
+    printIP_ts  = millis() + 25000;
+    ssid_state_ts = millis() + 25000;
+    LastTimeID_LastState = LAST_TIME_PIN;
+    ssid_laststate = ssid_state;
+  }
+}
+
 void LastTimeIDChangeLoop() {
   LastTimeID_State = digitalRead(LAST_TIME_PIN);
   if (LastTimeID_State == LOW && LastTimeID_LastState == HIGH) {
@@ -246,7 +309,29 @@ void LastTimeIDChangeLoop() {
     LastTimeID = 0;
   }
 }
+#endif
 
+#ifdef FONT_PIN
+void FontChangeLoop() {
+
+  Font_State = digitalRead(FONT_PIN);
+  if (Font_State == LOW && Font_LastState == HIGH) {
+    if (Font_ID >= 0 && Font_ID < Font_Count) {
+      Font_ID++;
+    } else {
+      Font_ID = 0;
+    }
+    config["timer"]["font_id"] = Font_ID;
+    saveConfig();
+  // #ifdef OLED_I2C
+  //   myOLED.clrScr();
+  // #endif
+  }
+  Font_LastState = Font_State;
+}
+#endif
+
+#ifdef OTA_update_ENABLED
 void SW_Basic_OTA() {
   // Hostname defaults to esp3232-[MAC]
   ArduinoOTA.setHostname(SW_BASIC_OTA_HOSTNAME);
@@ -262,3 +347,4 @@ void SW_Basic_OTA() {
 
   ArduinoOTA.begin();
 }
+#endif

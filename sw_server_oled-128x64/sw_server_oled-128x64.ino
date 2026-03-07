@@ -9,10 +9,14 @@ GND -> GND
 // pins for Lolin s2 mini, for other boards - check and replace the pins with yours:
 #define SENSOR_PIN 6     // пин подключения датчика луча
 
-#define button01    13
-#define button02    12
-#define button03    10
+#define button01    13 // 38
+#define button02    12 // 36
+#define button03    10 // 34
 #define HotPlug_pin 11
+
+// #define button01    38
+// #define button02    36
+// #define button03    34
 
 #if defined(ESP32)
   #pragma message "ESP32 stuff happening!"
@@ -70,12 +74,199 @@ bool  button03_LastState = HIGH;
 
 #include "routes.h"
 
-/*
-boolean find_i2c(uint8_t address) { // функция проверки устройства по указанному адресу I2C
-  Wire.beginTransmission(address);
-  return (Wire.endTransmission () == 0); //возвращает true если ошибок нет (устройство подключено и отвечает)
+// void StartStop_old() {
+//   if (timerState == 0) {
+//     if (startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay) {
+//       startTime = millis();
+
+//       for (int i = LastTimeCount - 1; i > 0; i--) {
+//         LastTime[i] = LastTime[i - 1];
+//       }
+//       LastTime[0] = currentTime;
+
+//       timerState = 1;
+//       currentTime = millis() - startTime;
+//       lastChange = millis();
+//       notifyClients();
+//       }
+//       startStopLastState = startStopState;
+//     } else {
+//       currentTime = millis() - startTime;
+//       if (startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay) {
+//         timerState = 0;
+//         lastChange = millis();
+//         CalcTopTime();
+//         notifyClients();
+//         }
+//       startStopLastState = startStopState;
+//   }
+// }
+
+void StartStop() {
+    if (startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay) {
+      if (timerState == 0) {
+        startTime = millis();
+        timerState = 1;
+        notifyClients();
+      } else {
+        currentTime = millis() - startTime;
+        for (int i = LastTimeCount - 1; i > 0; i--) {
+          LastTime[i] = LastTime[i - 1];
+        }
+        LastTime[0] = currentTime;
+        CalcTopTime();
+        timerState = 0;
+        notifyClients();
+      }
+      lastChange = millis();
+    }
+      startStopLastState = startStopState;
+  if (timerState != 0) {
+    currentTime = millis() - startTime;
+  }
 }
-*/
+
+void TwoAthletes(byte athlet) {
+ 
+  if (timerStateArray[athlet] == 0) {
+    if (startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay) {
+      startTimeArray[athlet] = millis();
+      for (int i = LastTimeCount - 1; i > 0; i--) {
+        LastTime[i] = LastTime[i - 1];
+      }
+      LastTime[0] = currentTimeArray[athlet];
+
+      timerStateArray[athlet] = 1;
+      currentTimeArray[athlet] = millis() - startTimeArray[athlet];
+      lastChange = millis();
+      // notifyClients();
+      athleteNumber = !athleteNumber;
+      }
+      startStopLastState = startStopState;
+    } else {
+      currentTimeArray[athlet] = millis() - startTimeArray[athlet];
+      if (startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay) {
+        timerStateArray[athlet] = 0;
+        lastChange = millis();
+        // CalcTopTime();
+        // notifyClients();
+        if ( mode == "cr" ){
+          athleteNumber = !athleteNumber;
+        }
+      }
+      startStopLastState = startStopState;
+  }
+}
+
+// void TwoAthletesLap() {
+
+//     if (timerStateArray[athlet] == 0) {
+//       if ( startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay && athleteNumber == 0 ) {
+//         startTime1 = millis();
+
+//         for (int i = LastTimeCount - 1; i > 0; i--) {
+//           LastTime[i] = LastTime[i - 1];
+//         }
+//         LastTime[0] = currentTime1;
+
+//         timerState1 = 1;
+//         athleteNumber = 1;
+
+//         currentTime1 = millis() - startTime1;
+//         lastChange = millis();
+//         // notifyClients();
+//         startStopLastState = startStopState;
+//         }
+        
+//     } else {
+//         currentTime1 = millis() - startTime1;
+//         if ( startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay && athleteNumber == 0 ) {
+//           timerState1 = 0;
+//           athleteNumber = 1;
+//           lastChange = millis();
+//           // CalcTopTime();
+//           // notifyClients();
+//           startStopLastState = startStopState;
+//           }
+//         }
+
+//   startStopLastState = startStopState;
+
+// }
+
+void LapTimer() {
+  if (startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay) {
+    currentTime = millis() - startTime;
+    startTime = millis();
+
+    CalcTopTime();
+    for (int i = LastTimeCount - 1; i > 0; i--) {
+      LastTime[i] = LastTime[i - 1];
+    }
+    LastTime[0] = currentTime;
+  
+    timerState = 0;
+    notifyClients();
+    lastChange = millis();
+  }
+  startStopLastState = startStopState;
+    
+  if (millis() - startTime >= PrintDelay) {
+    currentTime = millis() - startTime;
+    if ( timerState == 0 ){ 
+      timerState = 1;
+      notifyClients();
+    }
+  }
+}
+
+void TwoAthletesLoop() {
+
+  if (athleteNumber == 0) {
+    if (startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay) {
+      currentTimeArray[1] = millis() - startTimeArray[1];
+      startTimeArray[1] = millis();
+
+      // CalcTopTime();
+
+    // for (int i = LastTimeCount - 1; i > 0; i--) {
+    //   LastTime[i] = LastTime[i - 1];
+    // }
+    // LastTime[0] = currentTime1;
+  
+    athleteNumber = 1;
+    // notifyClients();
+    lastChange = millis();
+  }
+  startStopLastState = startStopState;
+    
+    } else {
+      if (startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay) {
+        currentTimeArray[2] = millis() - startTimeArray[2];
+        startTimeArray[2] = millis();
+
+      // CalcTopTime();
+
+    // for (int i = LastTimeCount - 1; i > 0; i--) {
+    //   LastTime[i] = LastTime[i - 1];
+    // }
+    // LastTime[0] = currentTime2;
+  
+        athleteNumber = 0;
+    // notifyClients();
+        lastChange = millis();
+      }
+      startStopLastState = startStopState;
+
+    }
+
+  if ( millis() - startTimeArray[1] >= PrintDelay && startTimeArray[1] !=0 ) {
+    currentTimeArray[1] = millis() - startTimeArray[1];
+  }
+  if ( millis() - startTimeArray[2] >= PrintDelay && startTimeArray[2] !=0 ) {
+    currentTimeArray[2] = millis() - startTimeArray[2];
+  }
+}
 
 void setup() {
   Serial.begin(115200);
@@ -109,57 +300,24 @@ void loop() {
   startStopState = digitalRead(SENSOR_PIN);
 
   if ( mode == "ss"){ // Start-Stop timer
-      if (timerState == 0) {
-        if (startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay) {
-          startTime = millis();
-
-          for (int i = LastTimeCount - 1; i > 0; i--) {
-            LastTime[i] = LastTime[i - 1];
-          }
-          LastTime[0] = currentTime;
-
-          timerState = 1;
-          currentTime = millis() - startTime;
-          lastChange = millis();
-          notifyClients();
-        }
-        startStopLastState = startStopState;
-      } else {
-        currentTime = millis() - startTime;
-        if (startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay) {
-          timerState = 0;
-          lastChange = millis();
-          CalcTopTime();
-          notifyClients();
-          }
-        startStopLastState = startStopState;
-      }
+    StartStop();
   }
   else if ( mode == "lt" ) {  // Срабатывание таймера по каждому пересечению луча, как китайский лаптаймер
-    if (startStopState == SensorState && startStopLastState == SensorLastState && millis() - lastChange > StopDelay) {
-        currentTime = millis() - startTime;
-        startTime = millis();
-
-        CalcTopTime();
-
-        for (int i = LastTimeCount - 1; i > 0; i--) {
-          LastTime[i] = LastTime[i - 1];
-        }
-        LastTime[0] = currentTime;
-
-        timerState = 0;
-        notifyClients();
-        lastChange = millis();
-      }
-      startStopLastState = startStopState;
-    
-      if (millis() - startTime >= PrintDelay) {
-        currentTime = millis() - startTime;
-        if ( timerState == 0 ){ 
-          timerState = 1;
-          notifyClients();
-        }
-      }
+    LapTimer();
+  }
+  else if ( mode == "cr" ){
+    TwoAthletes(athleteNumber);
+    if ( timerStateArray[0] != 0 ){ currentTimeArray[0] = millis() - startTimeArray[0]; } 
+    if ( timerStateArray[1] != 0 ){ currentTimeArray[1] = millis() - startTimeArray[1]; }       
+  }
+  else if ( mode == "2at" ){
+    // TwoAthletesLap();
+    TwoAthletes(athleteNumber);
+    if ( timerStateArray[0] != 0 ){ currentTimeArray[0] = millis() - startTimeArray[0]; } 
+    if ( timerStateArray[1] != 0 ){ currentTimeArray[1] = millis() - startTimeArray[1]; }    
+  }
+  else if ( mode == "2atl" ){
+    TwoAthletesLoop();
   }
 
   dnsServer.processNextRequest();
@@ -177,17 +335,19 @@ void loop() {
   LastTimeIDChangeLoop();
   FontChangeLoop();
 
-  printtime(currentTime);
-  if (LastTimeID <10) {
-    TimePrintXY(LastTime[LastTimeID], 0, 48, "LastTime 0" + String(LastTimeID) + ": ");
+  if ( mode == "cr"|| mode == "2at" || mode == "2atl" ){
+    printtime2(currentTimeArray[0],currentTimeArray[1]);
+  } else {
+    printtime(currentTime);
+    if (LastTimeID <10) {
+      TimePrintXY(LastTime[LastTimeID], 0, 48, "LastTime 0" + String(LastTimeID) + ": ");
+    }  else {
+      TimePrintXY(LastTime[LastTimeID], 0, 48, "LastTime " + String(LastTimeID) + ": ");
     }
-  else {
-    TimePrintXY(LastTime[LastTimeID], 0, 48, "LastTime " + String(LastTimeID) + ": ");
-  }
 
-  TestPressButton01();
-  TestPressButton02();
-  TestPressButton03();
-  
+    TestPressButton01();
+    TestPressButton02();
+    TestPressButton03();
+  }
   display.display();
 }

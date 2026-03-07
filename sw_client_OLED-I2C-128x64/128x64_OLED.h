@@ -1,7 +1,7 @@
 const uint8_t SizeX = 19;
 const uint8_t SizeY = 37;
-const uint8_t Font_Count = 3;
-uint8_t Font_ID = 0;
+// const uint8_t Font_Count = 3;
+//uint8_t Font_ID = 0;
 //bool Font_State = HIGH;
 //bool Font_LastState = HIGH;
 
@@ -1402,4 +1402,99 @@ const bool digits[Font_Count][10][SizeY][SizeX] = {
 
     } }
 };
+
+void printWifiState() {
+  if (Connected == true) {
+    myOLED.setFont(SmallFont);
+    myOLED.print("Wifi: ON ", 0, 57);
+  } else {
+    myOLED.setFont(SmallFont);
+    myOLED.print("Wifi: OFF", 0, 57);
+  }
+}
+
+void printWsState() {
+  if (ConnectedWS == true) {
+    myOLED.setFont(SmallFont);
+    myOLED.print("/ WS: ON ", 64, 57);
+  } else {
+    myOLED.setFont(SmallFont);
+    myOLED.print("/ WS: OFF", 64, 57);
+  }
+}
+
+void printSSID() {
+  myOLED.setFont(SmallFont);
+  //  myOLED.print("                      ", 0, 49);
+  // myOLED.print("Wifi: " + config["wifi"]["list"][wifi_id]["ssid"].as<String>() + "     ", 0, 49);
+  myOLED.print("Wifi: " + config["wifi"]["list"][wifi_id]["ssid"].as<String>(), 0, 49);
+ // myOLED.update();
+}
+
+void printPass() {
+  myOLED.setFont(SmallFont);
+  // myOLED.print("Pass: " + config["wifi"]["list"][wifi_id]["pass"].as<String>() + "     ", 0, 49);
+  myOLED.print("Pass: " + config["wifi"]["list"][wifi_id]["pass"].as<String>(), 0, 57);
+  // myOLED.update();
+}
+
+void drawDigit(int ddX, int digit) {
+  for (int y = 0; y < SizeY; y++) {
+    for (int x = 0; x < SizeX; x++) {
+      if (digits[Font_ID][digit][y][x] == 1) {
+        myOLED.setPixel(x + ddX, y);
+      } 
+      // else {
+      //   myOLED.clrPixel(x + ddX, y);
+      // }
+    }
+  }
+}
+
+void PrintTime() {
+
+  if (Font_ID == Font_Count) {
+    
+    myOLED.setFont(BigNumbers);
+    myOLED.print(String(CurrentMinutes) + "-" + String(CurrenttSeconds) + String(Currentseconds) + "." + String(CurrentmSeconds) + String(CurrentmiSeconds) + String(CurrentmilSeconds), 8, 8);
+
+  } else {
+    int dX = 1;
+    // Minutes
+    drawDigit(dX + 0, CurrentMinutes);
+    // Seconds
+    drawDigit(dX + (1 * SizeX) + 5, CurrenttSeconds);
+    drawDigit(dX + (2 * SizeX) + 6, Currentseconds);
+    // milliseconds
+    drawDigit(dX + (3 * SizeX) + 11, CurrentmSeconds);
+    drawDigit(dX + (4 * SizeX) + 12, CurrentmiSeconds);
+    drawDigit(dX + (5 * SizeX) + 13, CurrentmilSeconds);
+    // Двоеточие
+    myOLED.drawRect(dX + (1 * SizeX) + 1, int(SizeY / 3), dX + (1 * SizeX) + 3, int(SizeY / 3)+2);
+    myOLED.setPixel(dX + (1 * SizeX) + 2, int(SizeY / 3) + 1);
+
+    myOLED.drawRect(dX + (1 * SizeX) + 1, int(SizeY - SizeY / 3), dX + (1 * SizeX) + 3, int(SizeY - SizeY / 3) + 2);
+    myOLED.setPixel(dX + (1 * SizeX) + 2, int(SizeY - SizeY / 3) + 1);
+    // Точка
+    myOLED.drawRect(dX + (3 * SizeX) + 7, SizeY - 3, dX + (3 * SizeX) + 9, SizeY - 1);
+    myOLED.setPixel(dX + (3 * SizeX) + 8, SizeY - 2);
+  }
+}
+
+void TimePrintXY(uint32_t time, byte x, byte y, String name) {
+
+  uint8_t minutes = (int)(time / 60000) % 10;
+  uint8_t tSeconds = (int)(time % 60000 / 10000);
+  uint8_t seconds = (int)(time % 60000 % 10000 / 1000);
+  uint8_t mSeconds = (int)(time % 60000 % 1000 / 100);
+  uint8_t miSeconds = (int)(time % 60000 % 100 / 10);
+  uint8_t milSeconds = (int)(time % 60000 % 10);
+  myOLED.setFont(SmallFont);
+  //myOLED.print("                      ", x, y);
+  // myOLED.print(name + String(minutes) + ":" + String(tSeconds) + String(seconds) + "." + String(mSeconds) + String(miSeconds) + String(milSeconds) + "           ", x, y);
+  myOLED.print(name + String(minutes) + ":" + String(tSeconds) + String(seconds) + "." + String(mSeconds) + String(miSeconds) + String(milSeconds), x, y);
+
+}
+
+
 

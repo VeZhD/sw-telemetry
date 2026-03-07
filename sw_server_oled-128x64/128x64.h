@@ -1531,6 +1531,102 @@ void printtime(long time) {
   
 }
 
+void printtime2(long time1, long time2) {
+  int minutes1 = (int)(time1 / 60000) % 10;
+  int tSeconds1 = (int)(time1 % 60000 / 10000);
+  int seconds1 = (int)(time1 % 60000 % 10000 / 1000);
+  int mSeconds1 = (int)(time1 % 60000 % 1000 / 100);
+  int miSeconds1 = (int)(time1 % 60000 % 100 / 10);
+  int milSeconds1 = (int)(time1 % 60000 % 10);
+
+  int minutes2 = (int)(time2 / 60000) % 10;
+  int tSeconds2 = (int)(time2 % 60000 / 10000);
+  int seconds2 = (int)(time2 % 60000 % 10000 / 1000);
+  int mSeconds2 = (int)(time2 % 60000 % 1000 / 100);
+  int miSeconds2 = (int)(time2 % 60000 % 100 / 10);
+  int milSeconds2 = (int)(time2 % 60000 % 10);
+
+  display.clearDisplay();
+
+  display.setCursor(0, 0);  // Start at top-left corner
+
+  display.setTextSize(3);  // Draw 3X-scale text
+  display.setTextColor(SSD1306_WHITE);
+  display.print(minutes1);
+  display.setTextSize(1);  // Draw 1X-scale text
+  display.print(F(" "));
+  display.fillRect(18, 6, 3, 3, SSD1306_WHITE);   // Draw :
+  display.fillRect(18, 12, 3, 3, SSD1306_WHITE);  // Draw :
+  display.setTextSize(3);                         // Draw 3X-scale text
+  display.print(tSeconds1);
+  display.print(seconds1);
+  display.setTextSize(1);  // Draw 1X-scale text
+  display.print(F(" "));
+  display.fillRect(60, 18, 3, 3, SSD1306_WHITE);  // Draw .
+  display.setTextSize(3);                         // Draw 3X-scale text
+  display.print(mSeconds1);
+  display.print(miSeconds1);
+  display.println(milSeconds1);
+
+  display.setTextWrap(false);
+  display.setTextSize(1);
+
+  display.println("mode: " + modeString);
+
+  display.setCursor(0, 32);  // Start at top-left corner
+  display.setTextSize(3);  // Draw 3X-scale text
+  display.setTextColor(SSD1306_WHITE);
+  display.print(minutes2);
+  display.setTextSize(1);  // Draw 1X-scale text
+  display.print(F(" "));
+  display.fillRect(18, 38, 3, 3, SSD1306_WHITE);   // Draw :
+  display.fillRect(18, 44, 3, 3, SSD1306_WHITE);  // Draw :
+  display.setTextSize(3);                         // Draw 3X-scale text
+  display.print(tSeconds2);
+  display.print(seconds2);
+  display.setTextSize(1);  // Draw 1X-scale text
+  display.print(F(" "));
+  display.fillRect(60, 50, 3, 3, SSD1306_WHITE);  // Draw .
+  display.setTextSize(3);                         // Draw 3X-scale text
+  display.print(mSeconds2);
+  display.print(miSeconds2);
+  display.println(milSeconds2);
+
+  // display.println("Wifi: " + config["wifi"]["list"][wifi_id]["ssid"].as<String>());
+  // if ( wifiMode == "server") {
+  //   display.println("Pass:" + config["wifi"]["list"][wifi_id]["pass"].as<String>());
+  // } else {
+  //   myIP = WiFi.localIP();
+  //     //################
+  //     apIP = String(myIP[0]) + ".";
+  //     apIP += String(myIP[1]) + ".";
+  //     apIP += String(myIP[2]) + ".";
+  //     apIP += String(myIP[3]);
+  //     //###################
+  //     display.print("IPv4: " + apIP);
+  //   }
+
+  display.setCursor(20, 40);
+  // display.print("mode: " + modeString);
+
+
+
+
+  display.setCursor(0, 56);
+  display.setTextSize(1);
+  if (startStopState == SensorLastState) {
+    display.setTextColor(SSD1306_WHITE);
+    display.print("Sensor is working! ");
+    startStopStateName = '1';
+  } else {
+    display.setTextColor(SSD1306_WHITE);
+    display.print("Sensor error!!! ");
+    startStopStateName = '0';
+  }
+  
+}
+
+
 void printip(void) {
   display.clearDisplay();
   display.setCursor(1, 32);  // Start at top-left corner
@@ -1571,16 +1667,16 @@ void TimePrintXY(uint32_t time, byte x, byte y, String name) {
   display.print(name + String(minutes) + ":" + String(tSeconds) + String(seconds) + "." + String(mSeconds) + String(miSeconds) + String(milSeconds));
 }
 
-uint ConvertTime(uint32_t time) {
+// uint ConvertTime(uint32_t time) {
 
-  uint8_t minutes = (int)(time / 60000) % 10;
-  uint8_t tSeconds = (int)(time % 60000 / 10000);
-  uint8_t seconds = (int)(time % 60000 % 10000 / 1000);
-  uint8_t mSeconds = (int)(time % 60000 % 1000 / 100);
-  uint8_t miSeconds = (int)(time % 60000 % 100 / 10);
-  uint8_t milSeconds = (int)(time % 60000 % 10);
-  return minutes * 100000 + tSeconds * 10000 + seconds * 1000 + mSeconds * 100 + miSeconds * 10 + milSeconds;
-}
+//   uint8_t minutes = (int)(time / 60000) % 10;
+//   uint8_t tSeconds = (int)(time % 60000 / 10000);
+//   uint8_t seconds = (int)(time % 60000 % 10000 / 1000);
+//   uint8_t mSeconds = (int)(time % 60000 % 1000 / 100);
+//   uint8_t miSeconds = (int)(time % 60000 % 100 / 10);
+//   uint8_t milSeconds = (int)(time % 60000 % 10);
+//   return minutes * 100000 + tSeconds * 10000 + seconds * 1000 + mSeconds * 100 + miSeconds * 10 + milSeconds;
+// }
 
 void TestPressButton01(void) {
    button01_State = digitalRead(button01);
