@@ -5,7 +5,7 @@ const uint8_t SizeY = 37;
 //bool Font_State = HIGH;
 //bool Font_LastState = HIGH;
 
-const bool digits[Font_Count][10][SizeY][SizeX] = {
+const bool digits[Font_Count][10][SizeY][SizeX] PROGMEM = {
   { {
       // 0
       { 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 },

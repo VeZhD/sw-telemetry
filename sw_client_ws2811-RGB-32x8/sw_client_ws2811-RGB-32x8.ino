@@ -37,8 +37,8 @@ const uint8_t Font_Count = 1;
 
 AsyncWebServer server(80);
 
- #include "config.h"
-#include "client.h"
+ #include "sw_config.h"
+#include "sw_client.h"
 #include "32x8.h"
 #include "ota_update.h"
 

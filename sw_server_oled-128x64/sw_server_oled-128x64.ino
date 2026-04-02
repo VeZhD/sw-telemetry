@@ -67,6 +67,7 @@ bool  button03_LastState = HIGH;
 #include "128x64.h"
 #include "ota_update.h"
 
+#include "index.h"
 #include "html_get.h"
 #include "favicon.h"
 #include "script.js.gz.h"
@@ -107,6 +108,7 @@ void StartStop() {
       if (timerState == 0) {
         startTime = millis();
         timerState = 1;
+        currentTime = millis() - startTime;
         notifyClients();
       } else {
         currentTime = millis() - startTime;
