@@ -2,7 +2,7 @@ void InitRoutes(){
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     // request->send_P(200, "text/html", index_html);
-    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html_gz, index_html_gz_len);
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/html", index_html_gz, index_html_gz_len);
     response->addHeader("Content-Type", "text/html");
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
@@ -21,7 +21,7 @@ void InitRoutes(){
   server.on("/config", HTTP_POST, [](AsyncWebServerRequest * request){}, NULL, saveConfigFile);
 
   server.on("/favicon.ico",  HTTP_GET, [](AsyncWebServerRequest *request){    
-    request->send_P(200, "image/png", favicon, favicon_png_len);
+    request->send(200, "image/png", favicon, favicon_png_len);
   });
 
 }

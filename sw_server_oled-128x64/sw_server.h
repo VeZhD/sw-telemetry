@@ -1,17 +1,8 @@
-//#include "WString.h"
+#include <WiFi.h>
+#include <esp_wifi.h>
+
 IPAddress myIP;
 String apIP = "";
-
-// */
-
-/* API is quite simple :
-#include “esp_timer.h”
-
-then call the function
-
-int64_t esp_timer_get_time (void)
-
-*/
 
 bool ssid_state = HIGH;
 bool ssid_laststate = HIGH;
@@ -25,27 +16,63 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 void connectToHost() {
+  WiFi.softAPdisconnect(true);
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
   delay(100);
   WiFi.mode(WIFI_STA);
+  delay(50);
   WiFi.begin(config["wifi"]["list"][wifi_id]["ssid"].as<String>(), config["wifi"]["list"][wifi_id]["pass"].as<String>());
 }
 
 void StartAPMode() {
   WiFi.softAPdisconnect(true);
+  WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
   delay(100);
+
+  wifi_country_t country = { "RU", 1, 13, WIFI_COUNTRY_POLICY_AUTO };
+
   WiFi.mode(WIFI_AP);
-  WiFi.softAP(config["wifi"]["list"][wifi_id]["ssid"].as<String>(), config["wifi"]["list"][wifi_id]["pass"].as<String>(), 13);
+  delay(50);
+  esp_wifi_set_country(&country);
+  
+  if (  config["wifi"]["list"][wifi_id]["ssid_channel"].as<int>() >= 1  && 
+        config["wifi"]["list"][wifi_id]["ssid_channel"].as<int>() <= 13 &&
+        config["wifi"]["list"][wifi_id]["ssid_hidden"].as<int>()  >= 0  && 
+        config["wifi"]["list"][wifi_id]["ssid_hidden"].as<int>()  <= 1  &&
+        config["wifi"]["list"][wifi_id]["max_connection"].as<int>() >=1 &&
+        config["wifi"]["list"][wifi_id]["max_connection"].as<int>() <= 10  
+      ) {
+    WiFi.softAP( config["wifi"]["list"][wifi_id]["ssid"].as<String>()
+                ,config["wifi"]["list"][wifi_id]["pass"].as<String>()
+                ,config["wifi"]["list"][wifi_id]["ssid_channel"].as<int>()
+                ,config["wifi"]["list"][wifi_id]["ssid_hidden"].as<int>()
+                ,config["wifi"]["list"][wifi_id]["max_connection"].as<int>()
+                );
+  } else {
+    WiFi.softAP( config["wifi"]["list"][wifi_id]["ssid"].as<String>(), config["wifi"]["list"][wifi_id]["pass"].as<String>() );
+  }
+
 }
 
-void InitWifi(){
-  if ( wifiMode == "server" ){
-    StartAPMode();
-  } else if ( wifiMode == "client") {
-    connectToHost();
+void initWifi( bool rst = HIGH ){
+  if (rst){
+    if ( wifiMode == "server" ){
+      StartAPMode();
+    } else if ( wifiMode == "client") {
+      connectToHost();
+    }
+  } else {
+    WiFi.softAPdisconnect(true);
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+    delay(100);
+    WiFi.mode(WIFI_AP);
+    delay(50);
+    WiFi.softAP("SWT-1234");
   }
+  
 }
 
 void InitDNS(){
@@ -65,7 +92,7 @@ void ssidChangeLoop() {
     }
     wifiMode = wifiList[wifi_id]["mode"].as<String>();
     //delay(250);
-    InitWifi();
+    initWifi();
     config["wifi"]["wifiid"] = String(wifi_id);
     saveConfig();
     ssid_state_ts = millis();
@@ -79,11 +106,13 @@ void notifyClients(void) {
   ws.textAll(startStopStateName + String(timerState) + String(currentTime));
 }
 
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t ClientID) {
   AwsFrameInfo *info = (AwsFrameInfo *)arg;
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
     data[len] = 0;
-    if (strcmp((char *)data, "toggle") == 0) {
+    if (strcmp((char *)data, "ping") == 0) {
+      ws.text(ClientID, "pong");
+    } else if (strcmp((char *)data, "toggle") == 0) {
       notifyClients();
     }
   }
@@ -98,9 +127,11 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
     case WS_EVT_DISCONNECT: //      Serial.printf("WebSocket client #%u disconnected\n", client->id());
       break;
     case WS_EVT_DATA:
-      handleWebSocketMessage(arg, data, len);
+      handleWebSocketMessage(arg, data, len, client->id());
       break;
     case WS_EVT_PONG:
+      break;
+    case WS_EVT_PING:
       break;
     case WS_EVT_ERROR:
       break;

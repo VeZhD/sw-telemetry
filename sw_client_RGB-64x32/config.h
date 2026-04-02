@@ -1,4 +1,3 @@
-
 #define JSON_CONFIG_FILE "/config_client.json"
 // config vars
 JsonDocument config;
@@ -12,7 +11,10 @@ uint8_t wifi_id = 1;
 void saveDefaultConfigFile()
 // Save Config in JSON format
 {
-  Serial.println(F("Saving configuration..."));
+  // Uncomment if we need to format filesystem
+  // SPIFFS.format();
+
+  // Serial.println(F("Saving configuration..."));
   
   uint32_t chipId = 0;
 
@@ -41,19 +43,20 @@ void saveDefaultConfigFile()
 
   // Open config file
   File configFile = SPIFFS.open(JSON_CONFIG_FILE, "w");
-  if (!configFile)
-  {
-    // Error, file did not open
-    Serial.println("failed to open config file for writing");
-  }
+  // if (!configFile)
+  // {
+  //   // Error, file did not open
+  //   Serial.println("failed to open config file for writing");
+  // }
  
   // Serialize JSON data to write to file
-  serializeJsonPretty(json, Serial);
-  if (serializeJson(json, configFile) == 0)
-  {
-    // Error writing file
-    Serial.println(F("Failed to write to file"));
-  }
+  // serializeJsonPretty(json, Serial);
+  serializeJson(json, configFile);
+  // if (serializeJson(json, configFile) == 0)
+  // {
+  //   // Error writing file
+  //   Serial.println(F("Failed to write to file"));
+  // }
   // Close file
   configFile.close();
 }
@@ -65,25 +68,25 @@ JsonDocument loadConfigFile()
   // SPIFFS.format();
   JsonDocument json;
   // Read configuration from FS json
-  Serial.println("Mounting File System...");
+  // Serial.println("Mounting File System...");
  
   // May need to make it begin(true) first time you are using SPIFFS
   if (SPIFFS.begin(false) || SPIFFS.begin(true))
   {
-    Serial.println("mounted file system");
+    // Serial.println("mounted file system");
     if (SPIFFS.exists(JSON_CONFIG_FILE))
     {
       // The file exists, reading and loading
-      Serial.println("reading config file");
+      // Serial.println("reading config file");
       File configFile = SPIFFS.open(JSON_CONFIG_FILE, "r");
       if (configFile)
       {
-        Serial.println("Opened configuration file");
+        // Serial.println("Opened configuration file");
         DeserializationError error = deserializeJson(json, configFile);
-        serializeJsonPretty(json, Serial);
+        // serializeJsonPretty(json, Serial);
         if (!error)
         {
-          Serial.println("Parsing JSON");
+          // Serial.println("Parsing JSON");
  
           // strcpy(testString, json["testString"]);
           // testNumber = json["testNumber"].as<int>();
@@ -93,7 +96,7 @@ JsonDocument loadConfigFile()
         else
         {
           // Error loading JSON data
-          Serial.println("Failed to load json config");
+          // Serial.println("Failed to load json config");
           return json;
         }
       }
@@ -103,18 +106,18 @@ JsonDocument loadConfigFile()
       return loadConfigFile();
     }
   }
-  else
-  {
-    // Error mounting file system
-    Serial.println("Failed to mount FS");
-  }
+  // else
+  // {
+  //   // Error mounting file system
+  //   Serial.println("Failed to mount FS");
+  // }
   
   return json;
 }
 
 void InitConfig(){
   // if (SPIFFS.begin(false) || SPIFFS.begin(true)){
-  //   Serial.println("mounted file system");
+  //   // Serial.println("mounted file system");
   //   saveDefaultConfigFile();
   // }
   config = loadConfigFile();
@@ -144,21 +147,22 @@ void saveConfigFile(AsyncWebServerRequest *request, uint8_t *data, size_t len, s
 void saveConfig(void){
     // Open config file
   File configFile = SPIFFS.open(JSON_CONFIG_FILE, "w");
-  if (!configFile)
-  {
-    // Error, file did not open
-    Serial.println("failed to open config file for writing");
-  }
+  // if (!configFile)
+  // {
+  //   // Error, file did not open
+  //   Serial.println("failed to open config file for writing");
+  // }
   
   //Serial.println( config["wifi"]["wifiid"].as<uint8_t>() );
 
   // Serialize JSON data to write to file
-  serializeJsonPretty(config, Serial);
-  if (serializeJson(config, configFile) == 0)
-  {
-    // Error writing file
-    Serial.println(F("Failed to write to file"));
-  }
+  serializeJson(config, configFile);
+  // serializeJsonPretty(config, Serial);
+  // if (serializeJson(config, configFile) == 0)
+  // {
+  //   // Error writing file
+  //   Serial.println(F("Failed to write to file"));
+  // }
   // Close file
   configFile.close();
 

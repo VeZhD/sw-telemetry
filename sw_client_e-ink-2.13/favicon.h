@@ -104,4 +104,4 @@ const unsigned char favicon[] PROGMEM = {
   0xae, 0x42, 0x60, 0x82
 };
 
-const unsigned int favicon_png_len = 1228;
+const unsigned int favicon_png_len PROGMEM = 1228;

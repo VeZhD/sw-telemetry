@@ -6,9 +6,11 @@ String gate;
 String sensorType;
 String wifiMode;
 JsonArray wifiList;
-String mode;
-String modeString = "start-stop";
-uint StopDelay = 1650;    // задержка срабатывания на луч в миллисекундах
+// String mode;
+enum mode_enum { ss, lt, dss, sss, dlt } ; 
+mode_enum mode = ss;
+String modeString = "Start-stop";
+uint StopDelay = 1550;    // задержка срабатывания на луч в миллисекундах
 uint PrintDelay = 10000;  // задержка отображения результата в режиме кругового таймера
 uint8_t wifi_id = 0;
 uint8_t Font_ID = 0;
@@ -18,7 +20,7 @@ bool SensorLastState;
 void saveDefaultConfigFile()
 // Save Config in JSON format
 {
-  Serial.println(F("Saving configuration..."));
+  // Serial.println(F("Saving configuration..."));
   
   uint32_t chipId = 0;
 
@@ -46,19 +48,20 @@ void saveDefaultConfigFile()
 
   // Open config file
   File configFile = SPIFFS.open(JSON_CONFIG_FILE, "w");
-  if (!configFile)
-  {
+  // if (!configFile)
+  // {
     // Error, file did not open
-    Serial.println("failed to open config file for writing");
-  }
+    // Serial.println("failed to open config file for writing");
+  // }
  
   // Serialize JSON data to write to file
-  serializeJsonPretty(json, Serial);
-  if (serializeJson(json, configFile) == 0)
-  {
-    // Error writing file
-    Serial.println(F("Failed to write to file"));
-  }
+  // serializeJsonPretty(json, Serial);
+  serializeJson(json, configFile);
+  // if (serializeJson(json, configFile) == 0)
+  // {
+  //   // Error writing file
+  //   Serial.println(F("Failed to write to file"));
+  // }
   // Close file
   configFile.close();
 }
@@ -66,41 +69,40 @@ void saveDefaultConfigFile()
 JsonDocument loadConfigFile()
 // Load existing configuration file
 {
-  // Uncomment if we need to format filesystem
-  // SPIFFS.format();
+
   JsonDocument json;
   // Read configuration from FS json
-  Serial.println("Mounting File System...");
+  // Serial.println("Mounting File System...");
  
   // May need to make it begin(true) first time you are using SPIFFS
   if (SPIFFS.begin(false) || SPIFFS.begin(true))
   {
-    Serial.println("mounted file system");
+    // Serial.println("mounted file system");
     if (SPIFFS.exists(JSON_CONFIG_FILE))
     {
-      // The file exists, reading and loading
-      Serial.println("reading config file");
+      // // The file exists, reading and loading
+      // Serial.println("reading config file");
       File configFile = SPIFFS.open(JSON_CONFIG_FILE, "r");
       if (configFile)
       {
-        Serial.println("Opened configuration file");
+        // Serial.println("Opened configuration file");
         DeserializationError error = deserializeJson(json, configFile);
-        serializeJsonPretty(json, Serial);
-        if (!error)
-        {
-          Serial.println("Parsing JSON");
+        // serializeJsonPretty(json, Serial);
+        // if (!error)
+        // {
+        //   Serial.println("Parsing JSON");
  
-          // strcpy(testString, json["testString"]);
-          // testNumber = json["testNumber"].as<int>();
+        //   // strcpy(testString, json["testString"]);
+        //   // testNumber = json["testNumber"].as<int>();
  
           return json;
-        }
-        else
-        {
-          // Error loading JSON data
-          Serial.println("Failed to load json config");
-          return json;
-        }
+        // }
+        // else
+        // {
+        //   // Error loading JSON data
+        //   Serial.println("Failed to load json config");
+        //   return json;
+        // }
       }
     }
     else {
@@ -108,11 +110,11 @@ JsonDocument loadConfigFile()
       return loadConfigFile();
     }
   }
-  else
-  {
-    // Error mounting file system
-    Serial.println("Failed to mount FS");
-  }
+  // else
+  // {
+  //   // Error mounting file system
+  //   Serial.println("Failed to mount FS");
+  // }
   
   return json;
 }
@@ -124,7 +126,7 @@ void InitConfig(){
   wifiList = config["wifi"]["list"].as<JsonArray>();
   wifi_id =  config["wifi"]["wifiid"].as<uint8_t>();
   wifiMode = config["wifi"]["list"][wifi_id]["mode"].as<String>();
-  mode = config["timer"]["mode"].as<String>();
+  mode = config["timer"]["mode"].as<mode_enum>();
   PrintDelay = config["timer"]["printDelay"].as<int>();
   StopDelay = config["timer"]["stopDelay"].as<int>();
   Font_ID = config["timer"]["font_id"].as<int>();
@@ -135,20 +137,23 @@ void InitConfig(){
     pinMode(SENSOR_PIN, INPUT);    
   }
 
-  if ( mode == "ss" ){
-    modeString = "start-stop";
-  } else {
-    modeString = "lap-timer";
+  switch (mode) {
+    case ss:  { modeString = "Start-stop";      break; }
+    case lt:  { modeString = "Lap-timer";       break; }
+    case dss: { modeString = "Dual Start-Stop"; break; }
+    case sss: { modeString = "Sequential Start-Stop"; break; }
+    case dlt: { modeString = "Dual Lap-Timer";  break; }
   }
 
   if ( ( sensorType == "npn" and gate == "no" ) or ( sensorType == "pnp" and gate == "nc" ) ) {
-    // startStopState = !digitalRead(SENSOR_PIN);
     SensorState = LOW;
     SensorLastState = HIGH;
+    attachInterrupt( SENSOR_PIN, interruptTimer, FALLING );
+
   } else if ( ( sensorType == "pnp" and gate == "no" ) or ( sensorType == "npn" and gate == "nc" ) ) {
-    // startStopState = digitalRead(SENSOR_PIN);
     SensorState = HIGH;
     SensorLastState = LOW;
+    attachInterrupt( digitalPinToInterrupt(SENSOR_PIN), interruptTimer, RISING );
   }
 
 }
@@ -177,13 +182,14 @@ void saveConfig(void){
   
   //Serial.println( config["wifi"]["wifiid"].as<uint8_t>() );
 
-  // Serialize JSON data to write to file
-  serializeJsonPretty(config, Serial);
-  if (serializeJson(config, configFile) == 0)
-  {
-    // Error writing file
-    Serial.println(F("Failed to write to file"));
-  }
+  // // Serialize JSON data to write to file
+  // serializeJsonPretty(config, Serial);
+  serializeJson(config, configFile);
+  // if (serializeJson(config, configFile) == 0)
+  // {
+  //   // Error writing file
+  //   Serial.println(F("Failed to write to file"));
+  // }
   // Close file
   configFile.close();
 

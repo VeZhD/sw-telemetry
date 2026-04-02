@@ -37,7 +37,7 @@ const uint8_t Font_Count = 1;
 
 AsyncWebServer server(80);
 
- #include "sw_config.h"
+#include "sw_config.h"
 #include "sw_client.h"
 #include "32x8.h"
 #include "ota_update.h"
@@ -50,7 +50,7 @@ IPAddress myIP;
 String apIP;
 //uint32_t printIP_ts  = 0;
 
-String privet = "Hi, Cone-Man! MotoGymkhana the best!!!";
+// String privet = "Hi, Cone-Man! MotoGymkhana the best!!!";
 
 void printIP(void) {
 
@@ -79,17 +79,20 @@ void setup() {
   // pinMode(LAST_TIME_PIN, INPUT_PULLUP);  // пин кнопки переключения предыдущего времени
   pinMode(BRIGHTNESS_PIN, INPUT_PULLUP);
 
-  InitConfig();
-
-  if ( digitalRead(SSID_PIN) == LOW ) {
+  if ( digitalRead(SSID_PIN) == LOW and digitalRead(FONT_PIN) == LOW ) {
+      if (SPIFFS.begin(false) || SPIFFS.begin(true)) {
+        saveDefaultConfigFile();
+      }
+    InitConfig();
+  } else if ( digitalRead(SSID_PIN) == LOW ){
+    InitConfig();
     wifi_id = 0;
     wifiMode = "server";
     ssid_laststate = LOW;
-    if ( digitalRead(FONT_PIN) == LOW ) {
-      saveDefaultConfigFile();
-      InitConfig();
-    }
+  } else {
+    InitConfig();
   }
+
   InitDisplay();
 
   InitWifi();
@@ -148,5 +151,5 @@ void loop() {
   //TimePrintXY(LastTime[LastTimeID], 0, 40, "LastTime " + String(LastTimeID) + ": ");
 
   // matrix.show();
-  delayMicroseconds(1);
+  // delayMicroseconds(1);
 }
